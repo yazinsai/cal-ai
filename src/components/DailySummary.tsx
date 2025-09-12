@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { AlertCircle, TrendingUp, Target, Zap } from 'lucide-react';
 import { DailyTarget, FoodEntry } from '@/types';
@@ -9,6 +9,20 @@ interface DailySummaryProps {
   entries: FoodEntry[];
   targets: DailyTarget;
 }
+
+// Move CustomTooltip outside to prevent recreation on every render
+const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { grams: number } }> }) => {
+  if (active && payload && payload[0]) {
+    return (
+      <div className="bg-white dark:bg-gray-800 p-2 rounded shadow-lg border border-gray-200 dark:border-gray-700">
+        <p className="font-semibold">{payload[0].name}</p>
+        <p className="text-sm">{payload[0].payload.grams}g</p>
+        <p className="text-sm">{payload[0].value} cal</p>
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function DailySummary({ entries, targets }: DailySummaryProps) {
   const totals = entries.reduce(
@@ -25,11 +39,12 @@ export default function DailySummary({ entries, targets }: DailySummaryProps) {
   const caloriesRemaining = targets.calories - totals.calories;
   const isOverCalories = caloriesRemaining < 0;
 
-  const macroData = [
+  // Memoize macroData to prevent recreation on every render
+  const macroData = useMemo(() => [
     { name: 'Protein', value: totals.protein * 4, grams: totals.protein },
     { name: 'Carbs', value: totals.carbs * 4, grams: totals.carbs },
     { name: 'Fat', value: totals.fat * 9, grams: totals.fat },
-  ];
+  ], [totals.protein, totals.carbs, totals.fat]);
 
   const COLORS = {
     Protein: '#10b981',
@@ -58,19 +73,6 @@ export default function DailySummary({ entries, targets }: DailySummaryProps) {
     }
 
     return suggestions;
-  };
-
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { grams: number } }> }) => {
-    if (active && payload && payload[0]) {
-      return (
-        <div className="bg-white dark:bg-gray-800 p-2 rounded shadow-lg border border-gray-200 dark:border-gray-700">
-          <p className="font-semibold">{payload[0].name}</p>
-          <p className="text-sm">{payload[0].payload.grams}g</p>
-          <p className="text-sm">{payload[0].value} cal</p>
-        </div>
-      );
-    }
-    return null;
   };
 
   return (

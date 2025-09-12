@@ -81,7 +81,6 @@ export async function analyzeFoodImage(imageBase64: string, additionalContext?: 
           ],
         },
       ],
-      maxOutputTokens: 500,
     });
 
     const result = JSON.parse(text);
@@ -121,7 +120,6 @@ export async function analyzeFoodText(description: string): Promise<Partial<Food
     const { text } = await generateText({
       model,
       prompt,
-      maxOutputTokens: 500,
     });
 
     const result = JSON.parse(text);
@@ -164,7 +162,6 @@ export async function calculateDailyTargets(profile: UserProfile): Promise<Daily
     const { text } = await generateText({
       model,
       prompt,
-      maxOutputTokens: 500,
     });
 
     const result = JSON.parse(text);
@@ -211,7 +208,6 @@ export async function suggestMeal(
     const { text } = await generateText({
       model,
       prompt,
-      maxOutputTokens: 300,
     });
 
     const result = JSON.parse(text);

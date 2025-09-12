@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ApiKeyInput } from '@/components/ApiKeyInput';
 import { UserProfile } from '@/components/UserProfile';
 import { FoodEntry } from '@/components/FoodEntry';
@@ -37,9 +37,12 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<View>('entry');
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  useDailyReset(() => {
+  // Use useCallback to prevent infinite loop
+  const handleDailyReset = useCallback(() => {
     setDailyProgress(getDailyProgress());
-  });
+  }, []);
+
+  useDailyReset(handleDailyReset);
 
   useEffect(() => {
     const apiKey = getApiKey();
