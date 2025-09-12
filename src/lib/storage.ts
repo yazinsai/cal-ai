@@ -132,6 +132,13 @@ export function getDailyProgress(date?: string): DailyProgress {
   };
 }
 
+export function saveDailyProgress(progress: DailyProgress): void {
+  if (typeof window === 'undefined') return;
+  
+  const entriesKey = `${STORAGE_KEYS.FOOD_ENTRIES}_${progress.date}`;
+  localStorage.setItem(entriesKey, JSON.stringify(progress.entries));
+}
+
 export function getHistoricalData(days: number): DailyProgress[] {
   const results: DailyProgress[] = [];
   const today = new Date();

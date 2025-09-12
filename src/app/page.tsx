@@ -6,25 +6,34 @@ import { UserProfile } from '@/components/UserProfile';
 import { FoodEntry } from '@/components/FoodEntry';
 import { DailyProgress } from '@/components/DailyProgress';
 import { FoodEntryList } from '@/components/FoodEntryList';
+import DailySummary from '@/components/DailySummary';
+import HistoryChart from '@/components/HistoryChart';
+import Statistics from '@/components/Statistics';
+import DataExport from '@/components/DataExport';
 import { useDailyReset } from '@/hooks/useDailyReset';
 import { 
   getDailyProgress, 
   loadDailyTargets, 
   loadUserProfile,
   loadAppSettings,
-  saveAppSettings
+  saveAppSettings,
+  getHistoricalData,
+  saveDailyProgress,
+  saveUserProfile,
+  saveDailyTargets
 } from '@/lib/storage';
 import { getApiKey } from '@/lib/ai';
-import { DailyTarget, UserProfile as UserProfileType } from '@/types';
-import { Utensils, Settings, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { DailyTarget, UserProfile as UserProfileType, DailyProgress as DailyProgressType } from '@/types';
+import { Utensils, Settings, User, ChevronLeft, ChevronRight, Camera, BarChart3, Award } from 'lucide-react';
 
-type View = 'entry' | 'progress' | 'profile';
+type View = 'entry' | 'progress' | 'stats' | 'profile';
 
 export default function Home() {
   const [hasApiKey, setHasApiKey] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [dailyProgress, setDailyProgress] = useState(getDailyProgress());
   const [dailyTargets, setDailyTargets] = useState<DailyTarget | null>(null);
+  const [historicalData, setHistoricalData] = useState<DailyProgressType[]>([]);
   const [currentView, setCurrentView] = useState<View>('entry');
   const [isDarkMode, setIsDarkMode] = useState(true);
 
@@ -42,6 +51,9 @@ export default function Home() {
     const targets = loadDailyTargets();
     setDailyTargets(targets);
     
+    const history = getHistoricalData(90);
+    setHistoricalData(history);
+    
     const settings = loadAppSettings();
     setIsDarkMode(settings.darkMode);
     
@@ -54,6 +66,7 @@ export default function Home() {
 
   const refreshProgress = () => {
     setDailyProgress(getDailyProgress());
+    setHistoricalData(getHistoricalData(90));
   };
 
   const handleProfileSaved = (profile: UserProfileType, targets: DailyTarget) => {
@@ -76,8 +89,28 @@ export default function Home() {
     }
   };
 
+  const handleDataImport = (data: {
+    history: DailyProgressType[];
+    profile: UserProfileType | null;
+    targets: DailyTarget | null;
+  }) => {
+    if (data.profile) {
+      saveUserProfile(data.profile);
+      setHasProfile(true);
+    }
+    if (data.targets) {
+      saveDailyTargets(data.targets);
+      setDailyTargets(data.targets);
+    }
+    if (data.history && data.history.length > 0) {
+      data.history.forEach(day => saveDailyProgress(day));
+      setHistoricalData(getHistoricalData(90));
+      setDailyProgress(getDailyProgress());
+    }
+  };
+
   const swipeLeft = () => {
-    const views: View[] = ['entry', 'progress', 'profile'];
+    const views: View[] = ['entry', 'progress', 'stats', 'profile'];
     const currentIndex = views.indexOf(currentView);
     if (currentIndex > 0) {
       setCurrentView(views[currentIndex - 1]);
@@ -85,7 +118,7 @@ export default function Home() {
   };
 
   const swipeRight = () => {
-    const views: View[] = ['entry', 'progress', 'profile'];
+    const views: View[] = ['entry', 'progress', 'stats', 'profile'];
     const currentIndex = views.indexOf(currentView);
     if (currentIndex < views.length - 1) {
       setCurrentView(views[currentIndex + 1]);
@@ -162,17 +195,23 @@ export default function Home() {
           </div>
           
           <div className="flex gap-2 mt-3">
-            {(['entry', 'progress', 'profile'] as View[]).map((view) => (
+            {[
+              { id: 'entry', label: 'Log', icon: <Camera className="w-4 h-4" /> },
+              { id: 'progress', label: 'Progress', icon: <BarChart3 className="w-4 h-4" /> },
+              { id: 'stats', label: 'Stats', icon: <Award className="w-4 h-4" /> },
+              { id: 'profile', label: 'Profile', icon: <User className="w-4 h-4" /> }
+            ].map((view) => (
               <button
-                key={view}
-                onClick={() => setCurrentView(view)}
-                className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors ${
-                  currentView === view
+                key={view.id}
+                onClick={() => setCurrentView(view.id as View)}
+                className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-1 ${
+                  currentView === view.id
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}
               >
-                {view === 'entry' ? '📝 Log' : view === 'progress' ? '📊 Progress' : '👤 Profile'}
+                {view.icon}
+                <span className="hidden sm:inline">{view.label}</span>
               </button>
             ))}
           </div>
@@ -187,15 +226,44 @@ export default function Home() {
               
               <div className="grid lg:grid-cols-2 gap-6">
                 <DailyProgress progress={dailyProgress} targets={dailyTargets} />
-                <FoodEntryList entries={dailyProgress.entries} onUpdate={refreshProgress} />
+                {dailyTargets && (
+                  <DailySummary entries={dailyProgress.entries} targets={dailyTargets} />
+                )}
               </div>
+              
+              <FoodEntryList entries={dailyProgress.entries} onUpdate={refreshProgress} />
             </div>
           )}
           
           {currentView === 'progress' && (
             <div className="space-y-6">
               <DailyProgress progress={dailyProgress} targets={dailyTargets} />
+              {dailyTargets && (
+                <DailySummary entries={dailyProgress.entries} targets={dailyTargets} />
+              )}
               <FoodEntryList entries={dailyProgress.entries} onUpdate={refreshProgress} />
+              {dailyTargets && historicalData.length > 0 && (
+                <HistoryChart history={historicalData} targets={dailyTargets} />
+              )}
+            </div>
+          )}
+          
+          {currentView === 'stats' && (
+            <div className="space-y-6">
+              {dailyTargets && historicalData.length > 0 && (
+                <>
+                  <Statistics history={historicalData} targets={dailyTargets} />
+                  <HistoryChart history={historicalData} targets={dailyTargets} />
+                </>
+              )}
+              {dailyTargets && (
+                <DataExport 
+                  history={historicalData}
+                  profile={loadUserProfile()}
+                  targets={dailyTargets}
+                  onImport={handleDataImport}
+                />
+              )}
             </div>
           )}
           
@@ -203,6 +271,14 @@ export default function Home() {
             <div className="space-y-6">
               <UserProfile onProfileSaved={handleProfileSaved} />
               <ApiKeyInput onKeyValidated={setHasApiKey} />
+              {dailyTargets && (
+                <DataExport 
+                  history={historicalData}
+                  profile={loadUserProfile()}
+                  targets={dailyTargets}
+                  onImport={handleDataImport}
+                />
+              )}
             </div>
           )}
           

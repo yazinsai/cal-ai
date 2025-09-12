@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { AlertCircle, TrendingUp, Target, Zap } from 'lucide-react';
 import { DailyTarget, FoodEntry } from '@/types';
 
@@ -60,7 +60,7 @@ export default function DailySummary({ entries, targets }: DailySummaryProps) {
     return suggestions;
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { grams: number } }> }) => {
     if (active && payload && payload[0]) {
       return (
         <div className="bg-white dark:bg-gray-800 p-2 rounded shadow-lg border border-gray-200 dark:border-gray-700">
@@ -138,7 +138,7 @@ export default function DailySummary({ entries, targets }: DailySummaryProps) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={false}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"

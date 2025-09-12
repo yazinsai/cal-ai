@@ -14,7 +14,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
-import { Calendar, TrendingUp, BarChart3 } from 'lucide-react';
+import { Calendar, TrendingUp } from 'lucide-react';
 import { format, subDays, parseISO } from 'date-fns';
 import { DailyProgress, DailyTarget } from '@/types';
 
@@ -55,7 +55,12 @@ export default function HistoryChart({ history, targets }: HistoryChartProps) {
     );
   }, [filteredData]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface TooltipPayload {
+    value: number;
+    name: string;
+  }
+  
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: TooltipPayload[]; label?: string }) => {
     if (active && payload && payload[0]) {
       return (
         <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-lg border border-gray-200 dark:border-gray-700">
@@ -81,7 +86,7 @@ export default function HistoryChart({ history, targets }: HistoryChartProps) {
               </p>
             </>
           ) : (
-            payload.map((entry: any, index: number) => (
+            payload.map((entry, index: number) => (
               entry.name !== 'target' && (
                 <p key={index} className="text-sm text-gray-600 dark:text-gray-400">
                   {entry.name}: <span className="font-semibold">{entry.value}g</span>
