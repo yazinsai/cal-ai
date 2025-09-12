@@ -1,0 +1,2 @@
+- use context7 for latest docs when needed
+- update @PLAN.md after changes
