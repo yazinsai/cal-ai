@@ -5,7 +5,7 @@ import { FoodEntry as FoodEntryType, QuickLogItem } from '@/types';
 import { saveFoodEntry, loadQuickLogItems } from '@/lib/storage';
 import { useAI } from '@/hooks/useAI';
 import { Camera } from './Camera';
-import { Mic, MicOff, Plus, Minus, Check, Loader2, Zap } from 'lucide-react';
+import { Mic, MicOff, Plus, Minus, Check, Loader2, Zap, Edit2, X, Save } from 'lucide-react';
 
 interface FoodEntryProps {
   onEntryAdded?: (entry: FoodEntryType) => void;
@@ -15,6 +15,9 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
   const [description, setDescription] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [currentEntry, setCurrentEntry] = useState<Partial<FoodEntryType> | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [tempName, setTempName] = useState('');
+  const [reanalyzing, setReanalyzing] = useState(false);
   const [quickLogItems, setQuickLogItems] = useState<QuickLogItem[]>([]);
   const showQuickLog = true;
   const { loading, analyzeImage, analyzeText } = useAI();
@@ -127,6 +130,43 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
     }
   };
 
+  const startEditingName = () => {
+    if (currentEntry) {
+      setTempName(currentEntry.name || '');
+      setEditingName(true);
+    }
+  };
+
+  const cancelEditingName = () => {
+    setEditingName(false);
+    setTempName('');
+  };
+
+  const saveEditedName = async () => {
+    if (!tempName.trim() || !currentEntry) return;
+    
+    setReanalyzing(true);
+    setEditingName(false);
+    
+    // Re-analyze with the new description
+    const result = await analyzeText(tempName);
+    if (result) {
+      setCurrentEntry({
+        ...currentEntry,
+        name: result.name || tempName,
+        calories: result.calories || currentEntry.calories || 0,
+        protein: result.protein || currentEntry.protein || 0,
+        carbs: result.carbs || currentEntry.carbs || 0,
+        fat: result.fat || currentEntry.fat || 0,
+        sugar: result.sugar || currentEntry.sugar || 0,
+        confidence: result.confidence,
+      });
+    }
+    
+    setReanalyzing(false);
+    setTempName('');
+  };
+
   const startListening = () => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -232,13 +272,55 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
       {currentEntry && !loading && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <div className="mb-4">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              {currentEntry.name}
-            </h3>
+            {editingName ? (
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && saveEditedName()}
+                  className="flex-1 px-3 py-2 text-xl font-bold border-2 border-blue-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  autoFocus
+                />
+                <button
+                  onClick={saveEditedName}
+                  disabled={reanalyzing}
+                  className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                >
+                  <Save className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={cancelEditingName}
+                  className="p-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {currentEntry.name}
+                </h3>
+                <button
+                  onClick={startEditingName}
+                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  title="Edit name to recalculate nutrition"
+                >
+                  <Edit2 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                </button>
+              </div>
+            )}
             
             <div className="text-3xl font-bold text-blue-500 mb-4">
               {currentEntry.calories} calories
             </div>
+            
+            {reanalyzing && (
+              <div className="flex items-center text-sm text-blue-600 dark:text-blue-400 mb-2">
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Recalculating nutrition...
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
