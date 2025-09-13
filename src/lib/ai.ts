@@ -8,7 +8,7 @@ let apiKey: string | null = null;
  * Extracts JSON from AI responses that may contain markdown formatting or explanatory text.
  * Prioritizes the last JSON block found in the response for better accuracy.
  */
-function extractJsonFromMarkdown<T = any>(text: string): T {
+function extractJsonFromMarkdown<T = unknown>(text: string): T {
   console.log("Raw AI response:", text);
   
   try {
