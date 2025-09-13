@@ -4,6 +4,54 @@ import { FoodEntry, DailyTarget, UserProfile } from '@/types';
 
 let apiKey: string | null = null;
 
+/**
+ * Extracts JSON from AI responses that may contain markdown formatting or explanatory text.
+ * Prioritizes the last JSON block found in the response for better accuracy.
+ */
+function extractJsonFromMarkdown<T = any>(text: string): T {
+  console.log("Raw AI response:", text);
+  
+  try {
+    // Method 1: Try to extract all JSON blocks from markdown code blocks
+    const codeBlockMatches = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/g);
+    if (codeBlockMatches && codeBlockMatches.length > 0) {
+      // Get the last code block (most likely to be the final result)
+      const lastBlock = codeBlockMatches[codeBlockMatches.length - 1];
+      const jsonStr = lastBlock.replace(/```(?:json)?\s*/, '').replace(/\s*```$/, '').trim();
+      const result = JSON.parse(jsonStr);
+      console.log("Parsed from code block:", result);
+      return result;
+    }
+    
+    // Method 2: Find all JSON objects/arrays in the text
+    const jsonMatches = text.match(/[\[{][\s\S]*?[}\]]/g);
+    if (jsonMatches && jsonMatches.length > 0) {
+      // Try parsing from the last match (most complete/final JSON)
+      for (let i = jsonMatches.length - 1; i >= 0; i--) {
+        try {
+          const result = JSON.parse(jsonMatches[i]);
+          console.log("Parsed from JSON match:", result);
+          return result;
+        } catch {
+          // Continue to next match if this one fails
+          continue;
+        }
+      }
+    }
+    
+    // Method 3: Try parsing the entire text as JSON (last resort)
+    const trimmed = text.trim();
+    const result = JSON.parse(trimmed);
+    console.log("Parsed entire text as JSON:", result);
+    return result;
+    
+  } catch (error) {
+    console.error('JSON extraction failed:', error);
+    console.error('Attempted to parse:', text);
+    throw new Error('Failed to extract valid JSON from AI response');
+  }
+}
+
 export function setApiKey(key: string) {
   apiKey = key;
   if (typeof window !== 'undefined') {
@@ -83,35 +131,7 @@ export async function analyzeFoodImage(imageBase64: string, additionalContext?: 
       ],
     });
 
-    console.log("Raw AI response:", text);
-    
-    // Extract JSON from the response - handle various formats
-    let jsonStr = text;
-    
-    // Method 1: Try to extract JSON from markdown code blocks
-    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (codeBlockMatch) {
-      jsonStr = codeBlockMatch[1];
-    }
-    
-    // Method 2: Try to find JSON object directly
-    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      jsonStr = jsonMatch[0];
-    }
-    
-    // Clean up any remaining formatting
-    jsonStr = jsonStr.trim();
-    
-    try {
-      const result = JSON.parse(jsonStr);
-      console.log("Parsed result:", result);
-      return result;
-    } catch (parseError) {
-      console.error('JSON parsing failed:', parseError);
-      console.error('Attempted to parse:', jsonStr);
-      throw new Error('Failed to parse AI response as JSON');
-    }
+    return extractJsonFromMarkdown<Partial<FoodEntry>>(text);
   } catch (error) {
     console.error('Food image analysis failed:', error);
     throw new Error('Failed to analyze food image');
@@ -149,35 +169,7 @@ export async function analyzeFoodText(description: string): Promise<Partial<Food
       prompt,
     });
 
-    console.log("Raw AI response:", text);
-    
-    // Extract JSON from the response - handle various formats
-    let jsonStr = text;
-    
-    // Method 1: Try to extract JSON from markdown code blocks
-    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (codeBlockMatch) {
-      jsonStr = codeBlockMatch[1];
-    }
-    
-    // Method 2: Try to find JSON object directly
-    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      jsonStr = jsonMatch[0];
-    }
-    
-    // Clean up any remaining formatting
-    jsonStr = jsonStr.trim();
-    
-    try {
-      const result = JSON.parse(jsonStr);
-      console.log("Parsed result:", result);
-      return result;
-    } catch (parseError) {
-      console.error('JSON parsing failed:', parseError);
-      console.error('Attempted to parse:', jsonStr);
-      throw new Error('Failed to parse AI response as JSON');
-    }
+    return extractJsonFromMarkdown<Partial<FoodEntry>>(text);
   } catch (error) {
     console.error('Food text analysis failed:', error);
     throw new Error('Failed to analyze food description');
@@ -243,14 +235,7 @@ export async function calculateDailyTargets(profile: UserProfile): Promise<Daily
       prompt,
     });
 
-    // Extract the last JSON block from the response
-    const jsonMatches = text.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
-    if (!jsonMatches || jsonMatches.length === 0) {
-      throw new Error('No JSON found in AI response');
-    }
-    
-    // Parse the last JSON block (most likely to be the final result)
-    const result = JSON.parse(jsonMatches[jsonMatches.length - 1]);
+    const result = extractJsonFromMarkdown<DailyTarget>(text);
     
     // Validate the result has required fields
     if (!result.calories || !result.protein || !result.carbs || !result.fat || result.sugar === undefined) {
@@ -309,26 +294,7 @@ export async function suggestMeal(
       prompt,
     });
 
-    // Extract JSON from the response - handle various formats
-    let jsonStr = text;
-    
-    // Method 1: Try to extract JSON from markdown code blocks
-    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (codeBlockMatch) {
-      jsonStr = codeBlockMatch[1];
-    }
-    
-    // Method 2: Try to find JSON array directly
-    const jsonMatch = jsonStr.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      jsonStr = jsonMatch[0];
-    }
-    
-    // Clean up any remaining formatting
-    jsonStr = jsonStr.trim();
-    
-    const result = JSON.parse(jsonStr);
-    return result;
+    return extractJsonFromMarkdown<string[]>(text);
   } catch (error) {
     console.error('Meal suggestion failed:', error);
     return [];
