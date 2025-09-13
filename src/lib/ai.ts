@@ -53,7 +53,7 @@ export async function analyzeFoodImage(imageBase64: string, additionalContext?: 
   const client = createOpenAI({
     apiKey: key,
   });
-  const model = client('gpt-4o');
+  const model = client('gpt-5');
 
   const prompt = `Analyze this food image and provide nutritional information. ${additionalContext || ''}
   
@@ -167,14 +167,39 @@ export async function calculateDailyTargets(profile: UserProfile): Promise<Daily
   - Current Weight: ${profile.currentWeight ? `${profile.currentWeight}${profile.units === 'metric' ? 'kg' : 'lbs'}` : 'not specified'}
   - Height: ${profile.height ? `${profile.height}${profile.units === 'metric' ? 'cm' : 'inches'}` : 'not specified'}
   
-  Provide realistic, healthy targets. Respond with a JSON object containing:
-  - calories: number (daily calorie target)
-  - protein: number (grams per day)
-  - carbs: number (grams per day)
-  - fat: number (grams per day)
-  - sugar: number (maximum grams per day)
+  Calculate using this methodology:
+  1. Calculate BMR using Mifflin-St Jeor equation:
+     - Men: BMR = 10 × weight(kg) + 6.25 × height(cm) - 5 × age + 5
+     - Women: BMR = 10 × weight(kg) + 6.25 × height(cm) - 5 × age - 161
   
-  Use standard nutritional guidelines and ensure macros add up correctly.`;
+  2. Calculate TDEE based on activity level:
+     - Sedentary: BMR × 1.2
+     - Light: BMR × 1.375
+     - Moderate: BMR × 1.55
+     - Active: BMR × 1.725
+     - Very Active: BMR × 1.9
+  
+  3. Adjust calories based on goal:
+     - Lose weight: TDEE - 500 calories (for ~0.5kg/1lb loss per week)
+     - Maintain: TDEE
+     - Gain muscle: TDEE + 300-500 calories
+  
+  4. Calculate macros:
+     - Protein: 0.8-1.2g per kg body weight (higher for muscle gain)
+     - Fat: 25-30% of total calories
+     - Carbs: Remaining calories after protein and fat
+     - Sugar: Maximum 25-30g per day (limit added sugars to <10% of calories)
+  
+  IMPORTANT: Return ONLY a JSON object with these exact fields (no explanation text):
+  {
+    "calories": number (daily calorie target, rounded to nearest 50),
+    "protein": number (grams per day, rounded to nearest 5),
+    "carbs": number (grams per day, rounded to nearest 5),
+    "fat": number (grams per day, rounded to nearest 5),
+    "sugar": number (maximum grams per day, typically 25-30)
+  }
+  
+  Ensure the macros add up correctly: (protein × 4) + (carbs × 4) + (fat × 9) ≈ calories`;
 
   try {
     const { text } = await generateText({
@@ -182,15 +207,27 @@ export async function calculateDailyTargets(profile: UserProfile): Promise<Daily
       prompt,
     });
 
-    // Clean up the response - remove markdown code blocks if present
-    let cleanedText = text.trim();
-    if (cleanedText.startsWith('```json')) {
-      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    // Extract the last JSON block from the response
+    const jsonMatches = text.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
+    if (!jsonMatches || jsonMatches.length === 0) {
+      throw new Error('No JSON found in AI response');
     }
     
-    const result = JSON.parse(cleanedText);
+    // Parse the last JSON block (most likely to be the final result)
+    const result = JSON.parse(jsonMatches[jsonMatches.length - 1]);
+    
+    // Validate the result has required fields
+    if (!result.calories || !result.protein || !result.carbs || !result.fat || result.sugar === undefined) {
+      throw new Error('Invalid response format from AI');
+    }
+    
+    // Round values as specified
+    result.calories = Math.round(result.calories / 50) * 50;
+    result.protein = Math.round(result.protein / 5) * 5;
+    result.carbs = Math.round(result.carbs / 5) * 5;
+    result.fat = Math.round(result.fat / 5) * 5;
+    result.sugar = Math.min(30, Math.max(25, Math.round(result.sugar)));
+    
     return result;
   } catch (error) {
     console.error('Target calculation failed:', error);

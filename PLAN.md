@@ -81,6 +81,8 @@ A **lightning-fast**, client-side calorie tracking application designed for **ef
   - [x] Fats (grams)
   - [x] Sugar limit (grams)
 - [x] Store calculated targets in localStorage
+- [x] **FIXED**: Improved target calculation with proper BMR/TDEE formulas (Mifflin-St Jeor equation)
+- [x] **FIXED**: Simplified JSON parsing to extract last JSON block from AI responses
 
 ### API Key Management Component
 - [x] Create `components/ApiKeyInput.tsx`
