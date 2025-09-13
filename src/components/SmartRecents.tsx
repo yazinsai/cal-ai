@@ -21,9 +21,9 @@ export function SmartRecents({ onEntryAdded }: SmartRecentsProps) {
 
   const loadRecents = () => {
     const items = loadQuickLogItems();
-    const starredItems = items.filter(item => (item as any).starred);
+    const starredItems = items.filter(item => item.starred);
     const recentItems = items
-      .filter(item => !(item as any).starred)
+      .filter(item => !item.starred)
       .sort((a, b) => {
         // Sort by frequency and recency
         const scoreA = (a.frequency || 0) * 2 + (a.lastUsed ? new Date(a.lastUsed).getTime() / 1000000000 : 0);
@@ -82,7 +82,7 @@ export function SmartRecents({ onEntryAdded }: SmartRecentsProps) {
     const items = loadQuickLogItems();
     const index = items.findIndex(i => i.id === item.id);
     if (index !== -1) {
-      (items[index] as any).starred = !(items[index] as any).starred;
+      items[index].starred = !items[index].starred;
       saveQuickLogItems(items);
       loadRecents();
     }
@@ -101,7 +101,10 @@ export function SmartRecents({ onEntryAdded }: SmartRecentsProps) {
               <div key={item.id} className="relative">
                 <button
                   onClick={() => handleQuickAdd(item)}
-                  onLongPress={() => setEditingId(item.id)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setEditingId(item.id);
+                  }}
                   className="px-3 py-2 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 rounded-lg transition-colors"
                 >
                   <div className="font-medium text-sm text-gray-900 dark:text-white">

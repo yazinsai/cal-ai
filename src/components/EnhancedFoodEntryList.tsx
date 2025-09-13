@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { FoodEntry } from '@/types';
 import { updateFoodEntry, deleteFoodEntry, saveFoodEntry } from '@/lib/storage';
-import { format } from 'date-fns';
-import { Plus, Minus, Copy, Trash2, Check, X, Coffee, Sun, Moon, Cookie, ChevronRight, MoreVertical, CheckCircle } from 'lucide-react';
+import { Plus, Minus, Copy, Trash2, Coffee, Sun, Moon, Cookie, MoreVertical, CheckCircle } from 'lucide-react';
 
 interface EnhancedFoodEntryListProps {
   entries: FoodEntry[];

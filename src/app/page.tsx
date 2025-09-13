@@ -3,9 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ApiKeyInput } from '@/components/ApiKeyInput';
 import { UserProfile } from '@/components/UserProfile';
-import { FoodEntry } from '@/components/FoodEntry';
 import { DailyProgress } from '@/components/DailyProgress';
-import { FoodEntryList } from '@/components/FoodEntryList';
 import { EnhancedFoodEntryList } from '@/components/EnhancedFoodEntryList';
 import { DailyHeader } from '@/components/DailyHeader';
 import { SmartRecents } from '@/components/SmartRecents';
@@ -29,7 +27,7 @@ import {
 } from '@/lib/storage';
 import { getApiKey } from '@/lib/ai';
 import { DailyTarget, UserProfile as UserProfileType, DailyProgress as DailyProgressType } from '@/types';
-import { Utensils, Settings, User, ChevronLeft, ChevronRight, Camera, BarChart3, Award, Plus } from 'lucide-react';
+import { Utensils, Settings, User, Camera, BarChart3, Award, Plus } from 'lucide-react';
 
 type View = 'entry' | 'progress' | 'stats' | 'profile';
 
@@ -118,21 +116,6 @@ export default function Home() {
     }
   };
 
-  const swipeLeft = () => {
-    const views: View[] = ['entry', 'progress', 'stats', 'profile'];
-    const currentIndex = views.indexOf(currentView);
-    if (currentIndex > 0) {
-      setCurrentView(views[currentIndex - 1]);
-    }
-  };
-
-  const swipeRight = () => {
-    const views: View[] = ['entry', 'progress', 'stats', 'profile'];
-    const currentIndex = views.indexOf(currentView);
-    if (currentIndex < views.length - 1) {
-      setCurrentView(views[currentIndex + 1]);
-    }
-  };
 
   if (!hasApiKey) {
     return (

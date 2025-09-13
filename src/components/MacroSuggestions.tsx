@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { DailyProgress, DailyTarget, FoodEntry } from '@/types';
 import { saveFoodEntry } from '@/lib/storage';
-import { Sparkles, Info, Plus } from 'lucide-react';
+import { Sparkles, Plus } from 'lucide-react';
 
 interface MacroSuggestionsProps {
   progress: DailyProgress;
