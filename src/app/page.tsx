@@ -6,7 +6,6 @@ import { UserProfile } from '@/components/UserProfile';
 import { DailyProgress } from '@/components/DailyProgress';
 import { EnhancedFoodEntryList } from '@/components/EnhancedFoodEntryList';
 import { DailyHeader } from '@/components/DailyHeader';
-import { SmartRecents } from '@/components/SmartRecents';
 import { MacroSuggestions } from '@/components/MacroSuggestions';
 import { FoodEntry } from '@/components/FoodEntry';
 import DailySummary from '@/components/DailySummary';
@@ -215,8 +214,6 @@ export default function Home() {
           {currentView === 'entry' && (
             <div className="space-y-4">
               <DailyHeader progress={dailyProgress} targets={dailyTargets} />
-              
-              <SmartRecents onEntryAdded={refreshProgress} />
               
               {dailyTargets && (
                 <MacroSuggestions 
