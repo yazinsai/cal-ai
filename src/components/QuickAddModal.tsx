@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, Check, Camera, Loader2, Plus, Minus } from 'lucide-react';
+import { X, Check, Camera, Loader2 } from 'lucide-react';
 import { FoodEntry } from '@/types';
 import { saveFoodEntry } from '@/lib/storage';
 import { useAI } from '@/hooks/useAI';
@@ -18,12 +18,20 @@ export function QuickAddModal({ isOpen, onClose, onEntryAdded }: QuickAddModalPr
   const [input, setInput] = useState('');
   const [confirmData, setConfirmData] = useState<Partial<FoodEntry> | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { loading, analyzeText, analyzeImage } = useAI();
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 100);
+    }
+    // Reset processing state when modal closes
+    if (!isOpen) {
+      setIsProcessing(false);
+      setConfirmData(null);
+      setQuantity(1);
+      setInput('');
     }
   }, [isOpen]);
 
@@ -36,64 +44,74 @@ export function QuickAddModal({ isOpen, onClose, onEntryAdded }: QuickAddModalPr
   };
 
   const handleSubmit = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isProcessing || loading) return;
     
-    const result = await analyzeText(input);
-    if (result) {
-      if ((result.confidence || 0) >= 0.9) {
-        // High confidence - auto-add immediately
-        const entry: FoodEntry = {
-          id: `food_${Date.now()}`,
-          name: result.name || input,
-          calories: result.calories || 0,
-          protein: result.protein || 0,
-          carbs: result.carbs || 0,
-          fat: result.fat || 0,
-          sugar: result.sugar || 0,
-          timestamp: new Date().toISOString(),
-          mealType: getMealType(),
-          confidence: result.confidence,
-        };
-        
-        saveFoodEntry(entry);
-        onEntryAdded(entry);
-        setInput('');
-        onClose();
-      } else {
-        // Low confidence - show confirmation
-        setConfirmData({
-          id: `food_${Date.now()}`,
-          name: result.name || input,
-          calories: result.calories || 0,
-          protein: result.protein || 0,
-          carbs: result.carbs || 0,
-          fat: result.fat || 0,
-          sugar: result.sugar || 0,
-          mealType: getMealType(),
-          confidence: result.confidence,
-        });
+    setIsProcessing(true);
+    try {
+      const result = await analyzeText(input);
+      if (result) {
+        if ((result.confidence || 0) >= 0.9) {
+          // High confidence - auto-add immediately
+          const entry: FoodEntry = {
+            id: `food_${Date.now()}`,
+            name: result.name || input,
+            calories: result.calories || 0,
+            protein: result.protein || 0,
+            carbs: result.carbs || 0,
+            fat: result.fat || 0,
+            sugar: result.sugar || 0,
+            timestamp: new Date().toISOString(),
+            mealType: getMealType(),
+            confidence: result.confidence,
+          };
+          
+          saveFoodEntry(entry);
+          onEntryAdded(entry);
+          setInput('');
+          onClose();
+        } else {
+          // Low confidence - show confirmation
+          setConfirmData({
+            id: `food_${Date.now()}`,
+            name: result.name || input,
+            calories: result.calories || 0,
+            protein: result.protein || 0,
+            carbs: result.carbs || 0,
+            fat: result.fat || 0,
+            sugar: result.sugar || 0,
+            mealType: getMealType(),
+            confidence: result.confidence,
+          });
+        }
       }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const confirmEntry = () => {
-    if (confirmData) {
-      const entry = {
-        ...confirmData,
-        calories: (confirmData.calories || 0) * quantity,
-        protein: (confirmData.protein || 0) * quantity,
-        carbs: (confirmData.carbs || 0) * quantity,
-        fat: (confirmData.fat || 0) * quantity,
-        sugar: (confirmData.sugar || 0) * quantity,
-        timestamp: new Date().toISOString(),
-      } as FoodEntry;
-      
-      saveFoodEntry(entry);
-      onEntryAdded(entry);
-      setConfirmData(null);
-      setInput('');
-      setQuantity(1);
-      onClose();
+    if (confirmData && !isProcessing) {
+      setIsProcessing(true);
+      try {
+        const entry = {
+          ...confirmData,
+          calories: (confirmData.calories || 0) * quantity,
+          protein: (confirmData.protein || 0) * quantity,
+          carbs: (confirmData.carbs || 0) * quantity,
+          fat: (confirmData.fat || 0) * quantity,
+          sugar: (confirmData.sugar || 0) * quantity,
+          timestamp: new Date().toISOString(),
+        } as FoodEntry;
+        
+        saveFoodEntry(entry);
+        onEntryAdded(entry);
+        setConfirmData(null);
+        setInput('');
+        setQuantity(1);
+        onClose();
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -107,6 +125,8 @@ export function QuickAddModal({ isOpen, onClose, onEntryAdded }: QuickAddModalPr
 
 
   const handleCameraCapture = () => {
+    if (isProcessing || loading) return;
+    
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -114,32 +134,37 @@ export function QuickAddModal({ isOpen, onClose, onEntryAdded }: QuickAddModalPr
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
+        setIsProcessing(true);
         const reader = new FileReader();
         reader.onloadend = async () => {
-          const base64 = reader.result as string;
-          const result = await analyzeImage(base64);
-          if (result) {
-            const entry: FoodEntry = {
-              id: `food_${Date.now()}`,
-              name: result.name || 'Unknown food',
-              calories: result.calories || 0,
-              protein: result.protein || 0,
-              carbs: result.carbs || 0,
-              fat: result.fat || 0,
-              sugar: result.sugar || 0,
-              timestamp: new Date().toISOString(),
-              imageUrl: base64,
-              mealType: getMealType(),
-              confidence: result.confidence,
-            };
-            
-            if ((result.confidence || 0) >= 0.9) {
-              saveFoodEntry(entry);
-              onEntryAdded(entry);
-              onClose();
-            } else {
-              setConfirmData(entry);
+          try {
+            const base64 = reader.result as string;
+            const result = await analyzeImage(base64);
+            if (result) {
+              const entry: FoodEntry = {
+                id: `food_${Date.now()}`,
+                name: result.name || 'Unknown food',
+                calories: result.calories || 0,
+                protein: result.protein || 0,
+                carbs: result.carbs || 0,
+                fat: result.fat || 0,
+                sugar: result.sugar || 0,
+                timestamp: new Date().toISOString(),
+                imageUrl: base64,
+                mealType: getMealType(),
+                confidence: result.confidence,
+              };
+              
+              if ((result.confidence || 0) >= 0.9) {
+                saveFoodEntry(entry);
+                onEntryAdded(entry);
+                onClose();
+              } else {
+                setConfirmData(entry);
+              }
             }
+          } finally {
+            setIsProcessing(false);
           }
         };
         reader.readAsDataURL(file);
@@ -180,13 +205,18 @@ export function QuickAddModal({ isOpen, onClose, onEntryAdded }: QuickAddModalPr
               />
               <button
                 onClick={handleCameraCapture}
-                className="p-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                disabled={loading || isProcessing}
+                className="p-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:cursor-not-allowed rounded-lg transition-colors"
               >
-                <Camera className="w-5 h-5" />
+                {isProcessing ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Camera className="w-5 h-5" />
+                )}
               </button>
             </div>
             
-            {loading && (
+            {(loading || isProcessing) && (
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="w-6 h-6 animate-spin text-blue-500 mr-2" />
                 <span className="text-gray-600 dark:text-gray-400">Analyzing...</span>
@@ -211,19 +241,19 @@ export function QuickAddModal({ isOpen, onClose, onEntryAdded }: QuickAddModalPr
             <div className="flex items-center gap-4">
               <span className="text-gray-600 dark:text-gray-400">Quantity:</span>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="w-12 text-center font-semibold">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="p-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+                {[0.5, 1, 1.5].map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => setQuantity(q)}
+                    className={`px-3 py-1 rounded-lg font-medium transition-colors ${
+                      quantity === q
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {q}×
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -271,17 +301,26 @@ export function QuickAddModal({ isOpen, onClose, onEntryAdded }: QuickAddModalPr
             <div className="flex gap-2">
               <button
                 onClick={confirmEntry}
-                className="flex-1 py-2 px-4 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center"
+                disabled={isProcessing}
+                className="flex-1 py-2 px-4 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center"
               >
-                <Check className="w-5 h-5 mr-2" />
-                Add Entry
+                {isProcessing ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Check className="w-5 h-5 mr-2" />
+                    Add Entry
+                  </>
+                )}
               </button>
               <button
                 onClick={() => {
                   setConfirmData(null);
                   setQuantity(1);
+                  setIsProcessing(false);
                 }}
-                className="py-2 px-4 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+                disabled={isProcessing}
+                className="py-2 px-4 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
