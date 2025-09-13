@@ -53,6 +53,8 @@ export function Camera({ onCapture, autoSubmit = true }: CameraProps) {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Show the camera view with the uploaded image
+      setIsOpen(true);
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64 = reader.result as string;
@@ -63,6 +65,8 @@ export function Camera({ onCapture, autoSubmit = true }: CameraProps) {
       };
       reader.readAsDataURL(file);
     }
+    // Reset the input value so the same file can be selected again
+    e.target.value = '';
   };
 
   const retake = () => {

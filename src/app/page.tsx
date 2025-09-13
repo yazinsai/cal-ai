@@ -8,7 +8,7 @@ import { EnhancedFoodEntryList } from '@/components/EnhancedFoodEntryList';
 import { DailyHeader } from '@/components/DailyHeader';
 import { SmartRecents } from '@/components/SmartRecents';
 import { MacroSuggestions } from '@/components/MacroSuggestions';
-import { QuickAddModal } from '@/components/QuickAddModal';
+import { FoodEntry } from '@/components/FoodEntry';
 import DailySummary from '@/components/DailySummary';
 import HistoryChart from '@/components/HistoryChart';
 import Statistics from '@/components/Statistics';
@@ -290,11 +290,19 @@ export default function Home() {
         <Plus className="w-6 h-6" />
       </button>
       
-      <QuickAddModal 
-        isOpen={showQuickAdd}
-        onClose={() => setShowQuickAdd(false)}
-        onEntryAdded={refreshProgress}
-      />
+      {showQuickAdd && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowQuickAdd(false)}>
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <FoodEntry onEntryAdded={(entry) => {
+              refreshProgress();
+              setShowQuickAdd(false);
+            }} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

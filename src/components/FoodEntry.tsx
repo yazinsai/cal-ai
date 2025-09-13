@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { FoodEntry as FoodEntryType, QuickLogItem } from '@/types';
 import { saveFoodEntry, loadQuickLogItems, getUniqueFoodNames } from '@/lib/storage';
 import { useAI } from '@/hooks/useAI';
-import { Plus, Minus, Check, Loader2, Zap, Edit2, X, Save, Camera as CameraIcon } from 'lucide-react';
+import { Plus, Minus, Check, Loader2, Zap, Edit2, X, Save, Camera as CameraIcon, Upload } from 'lucide-react';
 import Webcam from 'react-webcam';
 import { compressImage } from '@/lib/imageCompression';
 
@@ -310,17 +310,27 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
             onKeyDown={handleKeyDown}
             onFocus={() => description.trim() && setShowSuggestions(true)}
             placeholder="What did you eat?"
-            className="w-full pl-4 pr-12 py-3 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            className="w-full pl-4 pr-20 py-3 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
           />
           
-          {/* Camera button inside input */}
-          <button
-            onClick={() => setIsCapturingImage(true)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-            title="Take a photo"
-          >
-            <CameraIcon className="w-6 h-6" />
-          </button>
+          {/* Upload and Camera buttons inside input */}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+              title="Upload an image"
+            >
+              <Upload className="w-6 h-6" />
+            </button>
+            
+            <button
+              onClick={() => setIsCapturingImage(true)}
+              className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              title="Take a photo"
+            >
+              <CameraIcon className="w-6 h-6" />
+            </button>
+          </div>
 
           {/* Hidden file input for upload */}
           <input
