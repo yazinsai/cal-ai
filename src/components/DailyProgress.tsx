@@ -69,7 +69,7 @@ export function DailyProgress({ progress, targets }: DailyProgressProps) {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Calories</h3>
             <div className="text-right">
               <span className={`text-2xl font-bold ${targets ? getTextColor(percentages?.calories || 0) : 'text-gray-900 dark:text-white'}`}>
-                {progress.totals.calories}
+                {Math.round(progress.totals.calories)}
               </span>
               {targets && (
                 <span className="text-gray-500 dark:text-gray-400 ml-1">
@@ -103,7 +103,7 @@ export function DailyProgress({ progress, targets }: DailyProgressProps) {
                 </span>
                 <span className="text-sm">
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    {progress.totals[macro]}g
+                    {Math.round(progress.totals[macro])}g
                   </span>
                   {targets && (
                     <span className="text-gray-500 dark:text-gray-400 ml-1">

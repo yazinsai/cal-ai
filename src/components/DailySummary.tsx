@@ -35,15 +35,22 @@ export default function DailySummary({ entries, targets }: DailySummaryProps) {
     }),
     { calories: 0, protein: 0, carbs: 0, fat: 0, sugar: 0 }
   );
+  
+  // Round all totals to avoid floating point issues
+  totals.calories = Math.round(totals.calories);
+  totals.protein = Math.round(totals.protein);
+  totals.carbs = Math.round(totals.carbs);
+  totals.fat = Math.round(totals.fat);
+  totals.sugar = Math.round(totals.sugar);
 
   const caloriesRemaining = targets.calories - totals.calories;
   const isOverCalories = caloriesRemaining < 0;
 
   // Memoize macroData to prevent recreation on every render
   const macroData = useMemo(() => [
-    { name: 'Protein', value: totals.protein * 4, grams: totals.protein },
-    { name: 'Carbs', value: totals.carbs * 4, grams: totals.carbs },
-    { name: 'Fat', value: totals.fat * 9, grams: totals.fat },
+    { name: 'Protein', value: Math.round(totals.protein * 4), grams: Math.round(totals.protein) },
+    { name: 'Carbs', value: Math.round(totals.carbs * 4), grams: Math.round(totals.carbs) },
+    { name: 'Fat', value: Math.round(totals.fat * 9), grams: Math.round(totals.fat) },
   ], [totals.protein, totals.carbs, totals.fat]);
 
   const COLORS = {
@@ -106,7 +113,7 @@ export default function DailySummary({ entries, targets }: DailySummaryProps) {
                 <h3 className="font-semibold text-gray-900 dark:text-white">Sugar Warning</h3>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Sugar intake ({totals.sugar}g) exceeds limit ({targets.sugar}g)
+                Sugar intake ({Math.round(totals.sugar)}g) exceeds limit ({targets.sugar}g)
               </p>
             </div>
           )}

@@ -6,6 +6,11 @@ import { UserProfile } from '@/components/UserProfile';
 import { FoodEntry } from '@/components/FoodEntry';
 import { DailyProgress } from '@/components/DailyProgress';
 import { FoodEntryList } from '@/components/FoodEntryList';
+import { EnhancedFoodEntryList } from '@/components/EnhancedFoodEntryList';
+import { DailyHeader } from '@/components/DailyHeader';
+import { SmartRecents } from '@/components/SmartRecents';
+import { MacroSuggestions } from '@/components/MacroSuggestions';
+import { QuickAddModal } from '@/components/QuickAddModal';
 import DailySummary from '@/components/DailySummary';
 import HistoryChart from '@/components/HistoryChart';
 import Statistics from '@/components/Statistics';
@@ -24,7 +29,7 @@ import {
 } from '@/lib/storage';
 import { getApiKey } from '@/lib/ai';
 import { DailyTarget, UserProfile as UserProfileType, DailyProgress as DailyProgressType } from '@/types';
-import { Utensils, Settings, User, ChevronLeft, ChevronRight, Camera, BarChart3, Award } from 'lucide-react';
+import { Utensils, Settings, User, ChevronLeft, ChevronRight, Camera, BarChart3, Award, Plus } from 'lucide-react';
 
 type View = 'entry' | 'progress' | 'stats' | 'profile';
 
@@ -36,6 +41,7 @@ export default function Home() {
   const [historicalData, setHistoricalData] = useState<DailyProgressType[]>([]);
   const [currentView, setCurrentView] = useState<View>('entry');
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   // Use useCallback to prevent infinite loop
   const handleDailyReset = useCallback(() => {
@@ -221,30 +227,34 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-6 pb-24">
         <div className="relative">
           {currentView === 'entry' && (
-            <div className="space-y-6">
-              <FoodEntry onEntryAdded={refreshProgress} />
+            <div className="space-y-4">
+              <DailyHeader progress={dailyProgress} targets={dailyTargets} />
               
-              <div className="grid lg:grid-cols-2 gap-6">
-                <DailyProgress progress={dailyProgress} targets={dailyTargets} />
-                {dailyTargets && (
-                  <DailySummary entries={dailyProgress.entries} targets={dailyTargets} />
-                )}
-              </div>
+              <SmartRecents onEntryAdded={refreshProgress} />
               
-              <FoodEntryList entries={dailyProgress.entries} onUpdate={refreshProgress} />
+              {dailyTargets && (
+                <MacroSuggestions 
+                  progress={dailyProgress} 
+                  targets={dailyTargets} 
+                  onEntryAdded={refreshProgress}
+                />
+              )}
+              
+              <EnhancedFoodEntryList entries={dailyProgress.entries} onUpdate={refreshProgress} />
             </div>
           )}
           
           {currentView === 'progress' && (
             <div className="space-y-6">
+              <DailyHeader progress={dailyProgress} targets={dailyTargets} />
               <DailyProgress progress={dailyProgress} targets={dailyTargets} />
               {dailyTargets && (
                 <DailySummary entries={dailyProgress.entries} targets={dailyTargets} />
               )}
-              <FoodEntryList entries={dailyProgress.entries} onUpdate={refreshProgress} />
+              <EnhancedFoodEntryList entries={dailyProgress.entries} onUpdate={refreshProgress} />
               {dailyTargets && historicalData.length > 0 && (
                 <HistoryChart history={historicalData} targets={dailyTargets} />
               )}
@@ -285,29 +295,23 @@ export default function Home() {
             </div>
           )}
           
-          <div className="fixed bottom-8 left-4 right-4 flex justify-between pointer-events-none md:hidden">
-            <button
-              onClick={swipeLeft}
-              disabled={currentView === 'entry'}
-              className={`p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg pointer-events-auto transition-opacity ${
-                currentView === 'entry' ? 'opacity-50' : ''
-              }`}
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            
-            <button
-              onClick={swipeRight}
-              disabled={currentView === 'profile'}
-              className={`p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg pointer-events-auto transition-opacity ${
-                currentView === 'profile' ? 'opacity-50' : ''
-              }`}
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
-          </div>
         </div>
       </main>
+      
+      {/* Global FAB for quick add */}
+      <button
+        onClick={() => setShowQuickAdd(true)}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center z-50 transition-transform hover:scale-110"
+        aria-label="Quick add food"
+      >
+        <Plus className="w-6 h-6" />
+      </button>
+      
+      <QuickAddModal 
+        isOpen={showQuickAdd}
+        onClose={() => setShowQuickAdd(false)}
+        onEntryAdded={refreshProgress}
+      />
     </div>
   );
 }

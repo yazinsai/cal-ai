@@ -69,4 +69,5 @@ export interface QuickLogItem {
   imageUrl?: string;
   lastUsed?: string;
   frequency?: number;
+  starred?: boolean;
 }

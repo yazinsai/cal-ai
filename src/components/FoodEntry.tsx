@@ -5,7 +5,7 @@ import { FoodEntry as FoodEntryType, QuickLogItem } from '@/types';
 import { saveFoodEntry, loadQuickLogItems } from '@/lib/storage';
 import { useAI } from '@/hooks/useAI';
 import { Camera } from './Camera';
-import { Mic, MicOff, Plus, Minus, Check, Loader2, Zap, Edit2, X, Save } from 'lucide-react';
+import { Plus, Minus, Check, Loader2, Zap, Edit2, X, Save } from 'lucide-react';
 
 interface FoodEntryProps {
   onEntryAdded?: (entry: FoodEntryType) => void;
@@ -13,7 +13,6 @@ interface FoodEntryProps {
 
 export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
   const [description, setDescription] = useState('');
-  const [isListening, setIsListening] = useState(false);
   const [currentEntry, setCurrentEntry] = useState<Partial<FoodEntryType> | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState('');
@@ -167,38 +166,6 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
     setTempName('');
   };
 
-  const startListening = () => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-      const recognition = new SpeechRecognition();
-      
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-      
-      recognition.onstart = () => {
-        setIsListening(true);
-      };
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setDescription(transcript);
-        setIsListening(false);
-      };
-      
-      recognition.onerror = () => {
-        setIsListening(false);
-      };
-      
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-      
-      recognition.start();
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -211,20 +178,9 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleTextSubmit()}
-            placeholder="Type or speak what you ate..."
+            placeholder="Type what you ate..."
             className="flex-1 px-4 py-3 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
           />
-          
-          <button
-            onClick={isListening ? undefined : startListening}
-            className={`p-3 rounded-lg transition-colors ${
-              isListening 
-                ? 'bg-red-500 text-white animate-pulse' 
-                : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
-            }`}
-          >
-            {isListening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-          </button>
           
           <button
             onClick={handleTextSubmit}
