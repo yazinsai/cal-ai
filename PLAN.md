@@ -1,7 +1,7 @@
 # Calorie Tracker App - Implementation Plan
 
 ## Overview
-A **lightning-fast**, client-side calorie tracking application designed for **effortless food logging** that takes seconds, not minutes. The app prioritizes an ultra-quick logging experience using AI SDK with GPT-4 Vision to instantly analyze food photos and text descriptions, providing calorie counts and macro breakdowns without friction.
+A **lightning-fast**, client-side calorie tracking application designed for **effortless food logging** that takes seconds, not minutes. The app prioritizes an ultra-quick logging experience using AI SDK with Gemini 2.5 Flash via OpenRouter to instantly analyze food photos and text descriptions, providing calorie counts and macro breakdowns without friction.
 
 ### Core Philosophy: Speed & Simplicity
 - **Primary Goal**: Make food logging so quick and easy that users actually do it consistently
@@ -12,7 +12,7 @@ A **lightning-fast**, client-side calorie tracking application designed for **ef
 ## Phase 1: Project Setup & Core Infrastructure
 
 ### Dependencies Installation
-- [x] Install Vercel AI SDK (`npm install ai @ai-sdk/openai`)
+- [x] Install Vercel AI SDK (`npm install ai @openrouter/ai-sdk-provider`)
 - [x] Install Recharts for data visualization (`npm install recharts`)
 - [x] Install date-fns for date handling (`npm install date-fns`)
 - [x] Install Lucide React for icons (`npm install lucide-react`)
@@ -37,11 +37,12 @@ A **lightning-fast**, client-side calorie tracking application designed for **ef
 ## Phase 2: AI SDK Integration & Storage Layer
 
 ### AI SDK Configuration
-- [x] Create `lib/ai.ts` for AI SDK setup with OpenAI provider
+- [x] Create `lib/ai.ts` for AI SDK setup with OpenRouter provider
 - [x] Implement secure API key validation
-- [x] Create function to analyze food images using GPT-4 Vision via AI SDK
-- [x] Create function to analyze text descriptions using AI SDK
+- [x] Create function to analyze food images using Gemini 2.5 Flash via OpenRouter
+- [x] Create function to analyze text descriptions using Gemini 2.5 Flash
 - [x] Implement prompt engineering for accurate calorie/macro estimation
+- [x] **UPDATED**: Switched from OpenAI GPT-5 to OpenRouter with Gemini 2.5 Flash for 10x faster image analysis
 
 ### Local Storage Management
 - [x] Create `lib/storage.ts` with functions for:

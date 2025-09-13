@@ -1,4 +1,4 @@
-import { createOpenAI } from '@ai-sdk/openai';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateText } from 'ai';
 import { FoodEntry, DailyTarget, UserProfile } from '@/types';
 
@@ -55,13 +55,13 @@ function extractJsonFromMarkdown<T = unknown>(text: string): T {
 export function setApiKey(key: string) {
   apiKey = key;
   if (typeof window !== 'undefined') {
-    localStorage.setItem('openai_api_key', key);
+    localStorage.setItem('openrouter_api_key', key);
   }
 }
 
 export function getApiKey(): string | null {
   if (!apiKey && typeof window !== 'undefined') {
-    apiKey = localStorage.getItem('openai_api_key');
+    apiKey = localStorage.getItem('openrouter_api_key');
   }
   return apiKey;
 }
@@ -69,18 +69,18 @@ export function getApiKey(): string | null {
 export function clearApiKey() {
   apiKey = null;
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('openai_api_key');
+    localStorage.removeItem('openrouter_api_key');
   }
 }
 
 export async function validateApiKey(key: string): Promise<boolean> {
   try {
-    const client = createOpenAI({
+    const client = createOpenRouter({
       apiKey: key,
     });
     
     const { text } = await generateText({
-      model: client('gpt-3.5-turbo'),
+      model: client('google/gemini-2.5-flash'),
       prompt: 'Say "valid"',
       maxOutputTokens: 100,
     });
@@ -98,10 +98,10 @@ export async function analyzeFoodImage(imageBase64: string, additionalContext?: 
     throw new Error('API key not set');
   }
 
-  const client = createOpenAI({
+  const client = createOpenRouter({
     apiKey: key,
   });
-  const model = client('gpt-5');
+  const model = client('google/gemini-2.5-flash');
 
   const prompt = `Analyze this food image and provide nutritional information. ${additionalContext || ''}
   
@@ -144,10 +144,10 @@ export async function analyzeFoodText(description: string): Promise<Partial<Food
     throw new Error('API key not set');
   }
 
-  const client = createOpenAI({
+  const client = createOpenRouter({
     apiKey: key,
   });
-  const model = client('gpt-4o-mini');
+  const model = client('google/gemini-2.5-flash');
 
   const prompt = `Analyze this food description and provide nutritional information: "${description}"
   
@@ -182,10 +182,10 @@ export async function calculateDailyTargets(profile: UserProfile): Promise<Daily
     throw new Error('API key not set');
   }
 
-  const client = createOpenAI({
+  const client = createOpenRouter({
     apiKey: key,
   });
-  const model = client('gpt-4o-mini');
+  const model = client('google/gemini-2.5-flash');
 
   const prompt = `Calculate daily nutritional targets for a person with the following profile:
   - Age: ${profile.age || 'not specified'}
@@ -273,10 +273,10 @@ export async function suggestMeal(
     throw new Error('API key not set');
   }
 
-  const client = createOpenAI({
+  const client = createOpenRouter({
     apiKey: key,
   });
-  const model = client('gpt-4o-mini');
+  const model = client('google/gemini-2.5-flash');
 
   const prompt = `Suggest 3 ${mealType} options that would help meet these remaining nutritional targets:
   - Calories: ${remainingTargets.calories}

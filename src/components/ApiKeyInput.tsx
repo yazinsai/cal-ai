@@ -56,18 +56,18 @@ export function ApiKeyInput({ onKeyValidated }: ApiKeyInputProps) {
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
       <div className="flex items-center mb-4">
         <Key className="w-6 h-6 mr-2 text-green-500" />
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">OpenAI API Key</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">OpenRouter API Key</h2>
       </div>
 
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
         Your API key is stored locally and never sent to any server. Get your key from{' '}
         <a
-          href="https://platform.openai.com/api-keys"
+          href="https://openrouter.ai/settings/keys"
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-500 hover:underline"
         >
-          OpenAI Platform
+          OpenRouter
         </a>
       </p>
 
