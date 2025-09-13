@@ -83,7 +83,15 @@ export async function analyzeFoodImage(imageBase64: string, additionalContext?: 
       ],
     });
 
-    const result = JSON.parse(text);
+    // Clean up the response - remove markdown code blocks if present
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    const result = JSON.parse(cleanedText);
     return result;
   } catch (error) {
     console.error('Food image analysis failed:', error);
@@ -122,7 +130,17 @@ export async function analyzeFoodText(description: string): Promise<Partial<Food
       prompt,
     });
 
-    const result = JSON.parse(text);
+    console.log("Text", text)
+    
+    // Clean up the response - remove markdown code blocks if present
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    const result = JSON.parse(cleanedText);
     return result;
   } catch (error) {
     console.error('Food text analysis failed:', error);
@@ -164,7 +182,15 @@ export async function calculateDailyTargets(profile: UserProfile): Promise<Daily
       prompt,
     });
 
-    const result = JSON.parse(text);
+    // Clean up the response - remove markdown code blocks if present
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    const result = JSON.parse(cleanedText);
     return result;
   } catch (error) {
     console.error('Target calculation failed:', error);
@@ -210,7 +236,15 @@ export async function suggestMeal(
       prompt,
     });
 
-    const result = JSON.parse(text);
+    // Clean up the response - remove markdown code blocks if present
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    const result = JSON.parse(cleanedText);
     return result;
   } catch (error) {
     console.error('Meal suggestion failed:', error);

@@ -127,7 +127,7 @@ A **lightning-fast**, client-side calorie tracking application designed for **ef
   - [x] Confidence indicator (subtle, non-blocking)
 - [x] **Quick-confirm button** - accept and close in one tap
 - [x] Inline adjustment with +/- buttons (no modal)
-- [x] Auto-save to daily log (no confirmation needed)
+- [x] Auto-save to daily log (no confirmation needed) - FIXED: Entries now auto-save immediately
 - [ ] Implement parallel image + text analysis for speed
 - [ ] **Immediate placeholder values** while processing
 - [ ] Progressive enhancement of results as AI responds
