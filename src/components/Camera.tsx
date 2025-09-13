@@ -81,14 +81,15 @@ export function Camera({ onCapture, autoSubmit = true }: CameraProps) {
           className="flex-1 flex items-center justify-center py-4 px-6 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors text-lg"
         >
           <CameraIcon className="w-6 h-6 mr-2" />
-          Quick Capture
+          Take Photo
         </button>
         
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center justify-center py-4 px-6 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+          className="flex-1 flex items-center justify-center py-4 px-6 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-colors text-lg"
         >
-          <Upload className="w-6 h-6" />
+          <Upload className="w-6 h-6 mr-2" />
+          Upload Image
         </button>
         
         <input
@@ -184,11 +185,29 @@ export function Camera({ onCapture, autoSubmit = true }: CameraProps) {
               )}
             </div>
           ) : (
-            <button
-              onClick={capture}
-              className="mx-auto block w-20 h-20 bg-white hover:bg-gray-100 rounded-full transition-colors border-4 border-gray-300"
-              aria-label="Capture photo"
-            />
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={capture}
+                className="w-20 h-20 bg-white hover:bg-gray-100 rounded-full transition-colors border-4 border-gray-300"
+                aria-label="Capture photo"
+              />
+              
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-full transition-colors flex items-center"
+              >
+                <Upload className="w-5 h-5 mr-2" />
+                Upload
+              </button>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </div>
           )}
         </div>
       </div>

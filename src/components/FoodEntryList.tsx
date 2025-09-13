@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { FoodEntry } from '@/types';
 import { updateFoodEntry, deleteFoodEntry } from '@/lib/storage';
 import { format } from 'date-fns';

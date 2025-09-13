@@ -26,18 +26,6 @@ export function EnhancedFoodEntryList({ entries, onUpdate }: EnhancedFoodEntryLi
     }
   };
 
-  const adjustCalories = (entry: FoodEntry, amount: number) => {
-    const newCalories = Math.max(0, entry.calories + amount);
-    const ratio = entry.calories > 0 ? newCalories / entry.calories : 1;
-    updateFoodEntry(entry.id, {
-      calories: newCalories,
-      protein: Math.round(entry.protein * ratio),
-      carbs: Math.round(entry.carbs * ratio),
-      fat: Math.round(entry.fat * ratio),
-      sugar: Math.round(entry.sugar * ratio),
-    });
-    if (onUpdate) onUpdate();
-  };
 
   const handleDelete = (entry: FoodEntry) => {
     setUndoEntry({ entry, action: 'delete' });
