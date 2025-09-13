@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { FoodEntry } from '@/types';
 import { updateFoodEntry, deleteFoodEntry } from '@/lib/storage';
 import { format } from 'date-fns';
-import { Edit2, Trash2, Check, X, Clock, Coffee, Sun, Moon, Cookie } from 'lucide-react';
+import { Plus, Minus, Trash2, Clock, Coffee, Sun, Moon, Cookie } from 'lucide-react';
 
 interface FoodEntryListProps {
   entries: FoodEntry[];
@@ -12,8 +12,6 @@ interface FoodEntryListProps {
 }
 
 export function FoodEntryList({ entries, onUpdate }: FoodEntryListProps) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValues, setEditValues] = useState<Partial<FoodEntry>>({});
 
   const getMealIcon = (mealType?: FoodEntry['mealType']) => {
     switch (mealType) {
@@ -30,36 +28,25 @@ export function FoodEntryList({ entries, onUpdate }: FoodEntryListProps) {
     }
   };
 
-  const startEdit = (entry: FoodEntry) => {
-    setEditingId(entry.id);
-    setEditValues({
-      calories: entry.calories,
-      protein: entry.protein,
-      carbs: entry.carbs,
-      fat: entry.fat,
-      sugar: entry.sugar,
-    });
-  };
-
-  const saveEdit = () => {
-    if (editingId) {
-      updateFoodEntry(editingId, editValues);
-      setEditingId(null);
-      setEditValues({});
+  const adjustCalories = (id: string, amount: number) => {
+    const entry = entries.find(e => e.id === id);
+    if (entry) {
+      const newCalories = Math.max(0, entry.calories + amount);
+      const ratio = newCalories / entry.calories;
+      updateFoodEntry(id, {
+        calories: newCalories,
+        protein: Math.round(entry.protein * ratio),
+        carbs: Math.round(entry.carbs * ratio),
+        fat: Math.round(entry.fat * ratio),
+        sugar: Math.round(entry.sugar * ratio),
+      });
       if (onUpdate) onUpdate();
     }
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditValues({});
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this entry?')) {
-      deleteFoodEntry(id);
-      if (onUpdate) onUpdate();
-    }
+    deleteFoodEntry(id);
+    if (onUpdate) onUpdate();
   };
 
   const groupedEntries = entries.reduce((acc, entry) => {
@@ -107,79 +94,46 @@ export function FoodEntryList({ entries, onUpdate }: FoodEntryListProps) {
                       key={entry.id}
                       className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4"
                     >
-                      {editingId === entry.id ? (
-                        <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
                           <div className="font-medium text-gray-900 dark:text-white">
                             {entry.name}
                           </div>
-                          
-                          <div className="grid grid-cols-5 gap-2">
-                            {(['calories', 'protein', 'carbs', 'fat', 'sugar'] as const).map((field) => (
-                              <div key={field}>
-                                <label className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                                  {field === 'calories' ? 'Cal' : field}
-                                </label>
-                                <input
-                                  type="number"
-                                  value={editValues[field] || 0}
-                                  onChange={(e) => setEditValues({
-                                    ...editValues,
-                                    [field]: parseInt(e.target.value) || 0,
-                                  })}
-                                  className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-600 dark:text-white"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                          
-                          <div className="flex gap-2">
-                            <button
-                              onClick={saveEdit}
-                              className="flex-1 py-1 px-3 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded transition-colors"
-                            >
-                              <Check className="w-4 h-4 mx-auto" />
-                            </button>
-                            <button
-                              onClick={cancelEdit}
-                              className="flex-1 py-1 px-3 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded transition-colors"
-                            >
-                              <X className="w-4 h-4 mx-auto" />
-                            </button>
+                          <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            <span>{entry.calories} cal</span>
+                            <span>P: {entry.protein}g</span>
+                            <span>C: {entry.carbs}g</span>
+                            <span>F: {entry.fat}g</span>
+                            <span className="text-xs">
+                              {format(new Date(entry.timestamp), 'h:mm a')}
+                            </span>
                           </div>
                         </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-900 dark:text-white">
-                              {entry.name}
-                            </div>
-                            <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                              <span>{entry.calories} cal</span>
-                              <span>P: {entry.protein}g</span>
-                              <span>C: {entry.carbs}g</span>
-                              <span>F: {entry.fat}g</span>
-                              <span className="text-xs">
-                                {format(new Date(entry.timestamp), 'h:mm a')}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => startEdit(entry)}
-                              className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
-                            >
-                              <Edit2 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(entry.id)}
-                              className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </button>
-                          </div>
+                        
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => adjustCalories(entry.id, 50)}
+                            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+                            title="Add 50 calories"
+                          >
+                            <Plus className="w-4 h-4 text-green-600 dark:text-green-400" />
+                          </button>
+                          <button
+                            onClick={() => adjustCalories(entry.id, -50)}
+                            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+                            title="Remove 50 calories"
+                          >
+                            <Minus className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(entry.id)}
+                            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+                            title="Delete entry"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </button>
                         </div>
-                      )}
+                      </div>
                     </div>
                   ))}
                 </div>

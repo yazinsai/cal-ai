@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { FoodEntry } from '@/types';
 import { updateFoodEntry, deleteFoodEntry, saveFoodEntry } from '@/lib/storage';
-import { Plus, Minus, Copy, Trash2, Coffee, Sun, Moon, Cookie, MoreVertical, CheckCircle } from 'lucide-react';
+import { Plus, Minus, Trash2, Coffee, Sun, Moon, Cookie, CheckCircle } from 'lucide-react';
 
 interface EnhancedFoodEntryListProps {
   entries: FoodEntry[];
@@ -26,24 +26,16 @@ export function EnhancedFoodEntryList({ entries, onUpdate }: EnhancedFoodEntryLi
     }
   };
 
-  const handleAddOne = (entry: FoodEntry) => {
+  const adjustCalories = (entry: FoodEntry, amount: number) => {
+    const newCalories = Math.max(0, entry.calories + amount);
+    const ratio = entry.calories > 0 ? newCalories / entry.calories : 1;
     updateFoodEntry(entry.id, {
-      calories: entry.calories + Math.round(entry.calories / (entry.portion ? parseInt(entry.portion) : 1)),
-      protein: entry.protein + Math.round(entry.protein / (entry.portion ? parseInt(entry.portion) : 1)),
-      carbs: entry.carbs + Math.round(entry.carbs / (entry.portion ? parseInt(entry.portion) : 1)),
-      fat: entry.fat + Math.round(entry.fat / (entry.portion ? parseInt(entry.portion) : 1)),
-      sugar: entry.sugar + Math.round(entry.sugar / (entry.portion ? parseInt(entry.portion) : 1)),
+      calories: newCalories,
+      protein: Math.round(entry.protein * ratio),
+      carbs: Math.round(entry.carbs * ratio),
+      fat: Math.round(entry.fat * ratio),
+      sugar: Math.round(entry.sugar * ratio),
     });
-    if (onUpdate) onUpdate();
-  };
-
-  const handleDuplicate = (entry: FoodEntry) => {
-    const newEntry: FoodEntry = {
-      ...entry,
-      id: `food_${Date.now()}`,
-      timestamp: new Date().toISOString(),
-    };
-    saveFoodEntry(newEntry);
     if (onUpdate) onUpdate();
   };
 
@@ -99,9 +91,24 @@ export function EnhancedFoodEntryList({ entries, onUpdate }: EnhancedFoodEntryLi
   };
 
   const adjustValue = (entry: FoodEntry, field: keyof FoodEntry, delta: number) => {
-    updateFoodEntry(entry.id, {
-      [field]: Math.max(0, (entry[field] as number) + delta),
-    });
+    if (field === 'calories') {
+      // When adjusting calories, scale all macros proportionally
+      const newCalories = Math.max(0, entry.calories + delta);
+      const ratio = entry.calories > 0 ? newCalories / entry.calories : 1;
+      
+      updateFoodEntry(entry.id, {
+        calories: newCalories,
+        protein: Math.round(entry.protein * ratio),
+        carbs: Math.round(entry.carbs * ratio),
+        fat: Math.round(entry.fat * ratio),
+        sugar: Math.round(entry.sugar * ratio),
+      });
+    } else {
+      // For direct macro adjustments (if needed elsewhere)
+      updateFoodEntry(entry.id, {
+        [field]: Math.max(0, (entry[field] as number) + delta),
+      });
+    }
     if (onUpdate) onUpdate();
   };
 
@@ -225,14 +232,19 @@ export function EnhancedFoodEntryList({ entries, onUpdate }: EnhancedFoodEntryLi
                       )}
                       
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900 dark:text-white">
-                          {entry.name}
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {entry.name}
+                          </span>
+                          <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-full">
+                            {entry.calories} cal
+                          </span>
                         </div>
                         <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                          <span className="font-semibold">{entry.calories} cal</span>
                           <span>P: {entry.protein}g</span>
                           <span>C: {entry.carbs}g</span>
                           <span>F: {entry.fat}g</span>
+                          <span>S: {entry.sugar}g</span>
                         </div>
                       </div>
 
@@ -253,48 +265,15 @@ export function EnhancedFoodEntryList({ entries, onUpdate }: EnhancedFoodEntryLi
 
                       {!isSelectionMode && (
                         <button
-                          onClick={() => setSwipedId(swipedId === entry.id ? null : entry.id)}
+                          onClick={() => handleDelete(entry)}
                           className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded ml-2"
+                          title="Delete entry"
                         >
-                          <MoreVertical className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4 text-red-500" />
                         </button>
                       )}
                     </div>
 
-                    {swipedId === entry.id && (
-                      <div className="absolute right-0 top-0 bottom-0 flex items-center bg-gradient-to-l from-gray-100 dark:from-gray-700 px-2">
-                        <button
-                          onClick={() => {
-                            handleAddOne(entry);
-                            setSwipedId(null);
-                          }}
-                          className="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg mr-1"
-                          title="+1 Serving"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleDuplicate(entry);
-                            setSwipedId(null);
-                          }}
-                          className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg mr-1"
-                          title="Duplicate"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleDelete(entry);
-                            setSwipedId(null);
-                          }}
-                          className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
