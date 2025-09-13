@@ -83,16 +83,35 @@ export async function analyzeFoodImage(imageBase64: string, additionalContext?: 
       ],
     });
 
-    // Clean up the response - remove markdown code blocks if present
-    let cleanedText = text.trim();
-    if (cleanedText.startsWith('```json')) {
-      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    console.log("Raw AI response:", text);
+    
+    // Extract JSON from the response - handle various formats
+    let jsonStr = text;
+    
+    // Method 1: Try to extract JSON from markdown code blocks
+    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1];
     }
     
-    const result = JSON.parse(cleanedText);
-    return result;
+    // Method 2: Try to find JSON object directly
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[0];
+    }
+    
+    // Clean up any remaining formatting
+    jsonStr = jsonStr.trim();
+    
+    try {
+      const result = JSON.parse(jsonStr);
+      console.log("Parsed result:", result);
+      return result;
+    } catch (parseError) {
+      console.error('JSON parsing failed:', parseError);
+      console.error('Attempted to parse:', jsonStr);
+      throw new Error('Failed to parse AI response as JSON');
+    }
   } catch (error) {
     console.error('Food image analysis failed:', error);
     throw new Error('Failed to analyze food image');
@@ -130,18 +149,35 @@ export async function analyzeFoodText(description: string): Promise<Partial<Food
       prompt,
     });
 
-    console.log("Text", text)
+    console.log("Raw AI response:", text);
     
-    // Clean up the response - remove markdown code blocks if present
-    let cleanedText = text.trim();
-    if (cleanedText.startsWith('```json')) {
-      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    // Extract JSON from the response - handle various formats
+    let jsonStr = text;
+    
+    // Method 1: Try to extract JSON from markdown code blocks
+    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1];
     }
     
-    const result = JSON.parse(cleanedText);
-    return result;
+    // Method 2: Try to find JSON object directly
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[0];
+    }
+    
+    // Clean up any remaining formatting
+    jsonStr = jsonStr.trim();
+    
+    try {
+      const result = JSON.parse(jsonStr);
+      console.log("Parsed result:", result);
+      return result;
+    } catch (parseError) {
+      console.error('JSON parsing failed:', parseError);
+      console.error('Attempted to parse:', jsonStr);
+      throw new Error('Failed to parse AI response as JSON');
+    }
   } catch (error) {
     console.error('Food text analysis failed:', error);
     throw new Error('Failed to analyze food description');
@@ -273,15 +309,25 @@ export async function suggestMeal(
       prompt,
     });
 
-    // Clean up the response - remove markdown code blocks if present
-    let cleanedText = text.trim();
-    if (cleanedText.startsWith('```json')) {
-      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    // Extract JSON from the response - handle various formats
+    let jsonStr = text;
+    
+    // Method 1: Try to extract JSON from markdown code blocks
+    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1];
     }
     
-    const result = JSON.parse(cleanedText);
+    // Method 2: Try to find JSON array directly
+    const jsonMatch = jsonStr.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[0];
+    }
+    
+    // Clean up any remaining formatting
+    jsonStr = jsonStr.trim();
+    
+    const result = JSON.parse(jsonStr);
     return result;
   } catch (error) {
     console.error('Meal suggestion failed:', error);

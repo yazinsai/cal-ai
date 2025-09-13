@@ -104,7 +104,7 @@ A **lightning-fast**, client-side calorie tracking application designed for **ef
 - [x] Camera facing mode toggle (front/back)
 - [ ] Batch photo support for complex meals
 - [ ] Background image processing for instant UI response
-- [ ] Image compression/resizing for API efficiency
+- [x] Image compression/resizing for API efficiency - **COMPLETED**: Images now compressed to 800x800 @ 70% quality before API submission
 
 ### Lightning-Fast Entry Form Component
 - [x] Create `components/FoodEntry.tsx`
