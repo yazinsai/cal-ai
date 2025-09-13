@@ -102,7 +102,6 @@ A **lightning-fast**, client-side calorie tracking application designed for **ef
 - [x] Add file upload as secondary option
 - [x] Optional preview (can be disabled for speed)
 - [x] Camera facing mode toggle (front/back)
-- [ ] Smart photo mode - automatically detect and crop food items
 - [ ] Batch photo support for complex meals
 - [ ] Background image processing for instant UI response
 - [ ] Image compression/resizing for API efficiency

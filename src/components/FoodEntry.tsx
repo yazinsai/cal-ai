@@ -48,14 +48,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
         confidence: result.confidence,
       };
       
-      // Auto-save the entry for quick logging
-      saveFoodEntry(entry);
-      
-      if (onEntryAdded) {
-        onEntryAdded(entry);
-      }
-      
-      // Optionally show the entry for review (but it's already saved)
+      // Show the entry for review/confirmation
       setCurrentEntry(entry);
     }
   };
