@@ -204,6 +204,28 @@ function updateQuickLogItems(entry: FoodEntry): void {
   saveQuickLogItems(items.slice(0, 20));
 }
 
+export function getUniqueFoodNames(days: number = 30): string[] {
+  if (typeof window === 'undefined') return [];
+  
+  const uniqueNames = new Set<string>();
+  const today = new Date();
+  
+  // Get food names from recent days
+  for (let i = 0; i < days; i++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const entries = loadFoodEntries(dateKey);
+    entries.forEach(entry => uniqueNames.add(entry.name));
+  }
+  
+  // Also include quick log items
+  const quickLogItems = loadQuickLogItems();
+  quickLogItems.forEach(item => uniqueNames.add(item.name));
+  
+  return Array.from(uniqueNames).sort();
+}
+
 export function clearAllData(): void {
   if (typeof window === 'undefined') return;
   

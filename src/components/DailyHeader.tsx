@@ -1,7 +1,6 @@
 'use client';
 
 import { DailyProgress, DailyTarget } from '@/types';
-import { AlertTriangle } from 'lucide-react';
 
 interface DailyHeaderProps {
   progress: DailyProgress;
@@ -32,24 +31,18 @@ export function DailyHeader({ progress, targets }: DailyHeaderProps) {
     return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
   };
 
-  const macroPercentage = (consumed: number, target: number) => {
-    return Math.min(100, Math.round((consumed / target) * 100));
-  };
-
-  const warnings = [];
-  if (remaining.sugar < 0) warnings.push(`Sugar ${Math.abs(remaining.sugar)}g over`);
-  if (remaining.calories < -200) warnings.push(`${Math.abs(remaining.calories)} cal over limit`);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sticky top-16 z-30">
       <div className="space-y-3">
         {/* Main calories display */}
         <div className="text-center">
-          <div className="text-3xl font-bold text-gray-900 dark:text-white">
-            {progress.totals.calories} / {targets.calories}
+          <div className={`mb-2 ${remaining.calories >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span className="text-3xl font-bold">{(remaining.calories >= 0 ? remaining.calories : Math.abs(remaining.calories)).toLocaleString()}</span>
+            <span className="text-xl ml-2">{remaining.calories >= 0 ? 'left' : 'over'}</span>
           </div>
-          <div className={`text-lg font-semibold mt-1 ${remaining.calories >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {remaining.calories >= 0 ? `${remaining.calories} remaining` : `${Math.abs(remaining.calories)} over`}
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {progress.totals.calories.toLocaleString()} of {targets.calories.toLocaleString()} calories consumed
           </div>
         </div>
 
@@ -84,43 +77,6 @@ export function DailyHeader({ progress, targets }: DailyHeaderProps) {
           </div>
         </div>
 
-        {/* Stacked horizontal bar for macros */}
-        <div className="relative h-6 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-          <div className="absolute inset-0 flex">
-            <div 
-              className="bg-blue-500 transition-all duration-300"
-              style={{ width: `${macroPercentage(progress.totals.protein, targets.protein + targets.carbs + targets.fat) * 100}%` }}
-              title={`Protein: ${progress.totals.protein}g`}
-            />
-            <div 
-              className="bg-amber-500 transition-all duration-300"
-              style={{ width: `${macroPercentage(progress.totals.carbs, targets.protein + targets.carbs + targets.fat) * 100}%` }}
-              title={`Carbs: ${progress.totals.carbs}g`}
-            />
-            <div 
-              className="bg-green-500 transition-all duration-300"
-              style={{ width: `${macroPercentage(progress.totals.fat, targets.protein + targets.carbs + targets.fat) * 100}%` }}
-              title={`Fat: ${progress.totals.fat}g`}
-            />
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-xs font-medium text-white drop-shadow">
-              P: {Math.round((progress.totals.protein * 4 / (progress.totals.calories || 1)) * 100)}% |
-              C: {Math.round((progress.totals.carbs * 4 / (progress.totals.calories || 1)) * 100)}% |
-              F: {Math.round((progress.totals.fat * 9 / (progress.totals.calories || 1)) * 100)}%
-            </span>
-          </div>
-        </div>
-
-        {/* Warnings */}
-        {warnings.length > 0 && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-            <AlertTriangle className="w-4 h-4 text-amber-600" />
-            <span className="text-sm text-amber-800 dark:text-amber-400">
-              {warnings.join(' • ')}
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

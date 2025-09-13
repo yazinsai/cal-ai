@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FoodEntry as FoodEntryType, QuickLogItem } from '@/types';
-import { saveFoodEntry, loadQuickLogItems } from '@/lib/storage';
+import { saveFoodEntry, loadQuickLogItems, getUniqueFoodNames } from '@/lib/storage';
 import { useAI } from '@/hooks/useAI';
-import { Camera } from './Camera';
-import { Plus, Minus, Check, Loader2, Zap, Edit2, X, Save } from 'lucide-react';
+import { Plus, Minus, Check, Loader2, Zap, Edit2, X, Save, Camera as CameraIcon } from 'lucide-react';
+import Webcam from 'react-webcam';
+import { compressImage } from '@/lib/imageCompression';
 
 interface FoodEntryProps {
   onEntryAdded?: (entry: FoodEntryType) => void;
@@ -18,12 +19,34 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
   const [tempName, setTempName] = useState('');
   const [reanalyzing, setReanalyzing] = useState(false);
   const [quickLogItems, setQuickLogItems] = useState<QuickLogItem[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  const [isCapturingImage, setIsCapturingImage] = useState(false);
   const showQuickLog = true;
   const { loading, analyzeImage, analyzeText } = useAI();
+  const webcamRef = useRef<Webcam>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setQuickLogItems(loadQuickLogItems());
   }, []);
+
+  useEffect(() => {
+    if (description.trim().length > 0) {
+      const allFoodNames = getUniqueFoodNames(30);
+      const filtered = allFoodNames.filter(name => 
+        name.toLowerCase().includes(description.toLowerCase())
+      ).slice(0, 5);
+      setSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+    setSelectedSuggestionIndex(-1);
+  }, [description]);
 
   const getMealType = (): FoodEntryType['mealType'] => {
     const hour = new Date().getHours();
@@ -33,31 +56,76 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
     return 'snack';
   };
 
-  const handleImageCapture = async (imageBase64: string) => {
-    const result = await analyzeImage(imageBase64);
-    if (result) {
-      const entry: FoodEntryType = {
-        id: `food_${Date.now()}`,
-        name: result.name || 'Unknown food',
-        calories: result.calories || 0,
-        protein: result.protein || 0,
-        carbs: result.carbs || 0,
-        fat: result.fat || 0,
-        sugar: result.sugar || 0,
-        timestamp: new Date().toISOString(),
-        imageUrl: imageBase64,
-        mealType: getMealType(),
-        confidence: result.confidence,
-      };
+  const handleImageCapture = async () => {
+    const imageSrc = webcamRef.current?.getScreenshot();
+    if (imageSrc) {
+      setIsCapturingImage(false);
       
-      // Show the entry for review/confirmation
-      setCurrentEntry(entry);
+      // Compress and analyze the image
+      try {
+        const compressedImage = await compressImage(imageSrc, 800, 800, 0.7);
+        const result = await analyzeImage(compressedImage);
+        if (result) {
+          const entry: FoodEntryType = {
+            id: `food_${Date.now()}`,
+            name: result.name || 'Unknown food',
+            calories: result.calories || 0,
+            protein: result.protein || 0,
+            carbs: result.carbs || 0,
+            fat: result.fat || 0,
+            sugar: result.sugar || 0,
+            timestamp: new Date().toISOString(),
+            imageUrl: compressedImage,
+            mealType: getMealType(),
+            confidence: result.confidence,
+          };
+          
+          // Show the entry for review/confirmation
+          setCurrentEntry(entry);
+        }
+      } catch (error) {
+        console.error('Failed to process image:', error);
+      }
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result as string;
+        try {
+          const compressedImage = await compressImage(base64, 800, 800, 0.7);
+          const result = await analyzeImage(compressedImage);
+          if (result) {
+            const entry: FoodEntryType = {
+              id: `food_${Date.now()}`,
+              name: result.name || 'Unknown food',
+              calories: result.calories || 0,
+              protein: result.protein || 0,
+              carbs: result.carbs || 0,
+              fat: result.fat || 0,
+              sugar: result.sugar || 0,
+              timestamp: new Date().toISOString(),
+              imageUrl: compressedImage,
+              mealType: getMealType(),
+              confidence: result.confidence,
+            };
+            setCurrentEntry(entry);
+          }
+        } catch (error) {
+          console.error('Failed to process image:', error);
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleTextSubmit = async () => {
     if (!description.trim()) return;
     
+    setShowSuggestions(false);
     const result = await analyzeText(description);
     if (result) {
       const entry: FoodEntryType = {
@@ -86,6 +154,34 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
       // Optionally show the entry for review (but it's already saved)
       setCurrentEntry(entry);
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown' && showSuggestions) {
+      e.preventDefault();
+      setSelectedSuggestionIndex(prev => 
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp' && showSuggestions) {
+      e.preventDefault();
+      setSelectedSuggestionIndex(prev => prev > -1 ? prev - 1 : -1);
+    } else if (e.key === 'Enter') {
+      if (selectedSuggestionIndex >= 0 && showSuggestions) {
+        e.preventDefault();
+        setDescription(suggestions[selectedSuggestionIndex]);
+        setShowSuggestions(false);
+      } else {
+        handleTextSubmit();
+      }
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+    }
+  };
+
+  const selectSuggestion = (suggestion: string) => {
+    setDescription(suggestion);
+    setShowSuggestions(false);
+    inputRef.current?.focus();
   };
 
   const handleQuickLog = (item: QuickLogItem) => {
@@ -169,27 +265,108 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
 
   return (
     <div className="space-y-4">
-      <Camera onCapture={handleImageCapture} autoSubmit={true} />
+      {/* Camera capture modal */}
+      {isCapturingImage && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 max-w-2xl w-full">
+            <div className="mb-4">
+              <Webcam
+                ref={webcamRef}
+                audio={false}
+                screenshotFormat="image/jpeg"
+                videoConstraints={{
+                  facingMode: 'environment',
+                  width: 1280,
+                  height: 720,
+                }}
+                className="w-full rounded-lg"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleImageCapture}
+                className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+              >
+                Capture Photo
+              </button>
+              <button
+                onClick={() => setIsCapturingImage(false)}
+                className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
-        <div className="flex gap-2">
+        <div className="relative">
           <input
+            ref={inputRef}
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleTextSubmit()}
-            placeholder="Type what you ate..."
-            className="flex-1 px-4 py-3 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            onKeyDown={handleKeyDown}
+            onFocus={() => description.trim() && setShowSuggestions(true)}
+            placeholder="What did you eat?"
+            className="w-full pl-4 pr-12 py-3 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
           />
           
+          {/* Camera button inside input */}
+          <button
+            onClick={() => setIsCapturingImage(true)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            title="Take a photo"
+          >
+            <CameraIcon className="w-6 h-6" />
+          </button>
+
+          {/* Hidden file input for upload */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+
+          {/* Autocomplete suggestions dropdown */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => selectSuggestion(suggestion)}
+                  className={`w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                    index === selectedSuggestionIndex ? 'bg-gray-100 dark:bg-gray-700' : ''
+                  } ${index === 0 ? 'rounded-t-lg' : ''} ${
+                    index === suggestions.length - 1 ? 'rounded-b-lg' : ''
+                  }`}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {description.trim() && (
           <button
             onClick={handleTextSubmit}
-            disabled={!description.trim() || loading}
-            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading}
+            className="mt-2 w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Add'}
+            {loading ? (
+              <span className="flex items-center justify-center">
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Analyzing...
+              </span>
+            ) : (
+              'Add Food Entry'
+            )}
           </button>
-        </div>
+        )}
       </div>
 
       {showQuickLog && quickLogItems.length > 0 && (
