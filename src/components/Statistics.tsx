@@ -29,19 +29,18 @@ export default function Statistics({ history, targets }: StatisticsProps) {
       day => differenceInDays(now, parseISO(day.date)) <= 30
     );
 
-    const calculateAverage = (days: DailyProgress[], key: keyof DailyProgress['totals']) => {
+    const calculateAverage = (days: DailyProgress[], key: keyof DailyProgress['totals'], decimals: number = 0) => {
       if (days.length === 0) return 0;
-      return Math.round(
-        days.reduce((sum, day) => sum + day.totals[key], 0) / days.length
-      );
+      const avg = days.reduce((sum, day) => sum + day.totals[key], 0) / days.length;
+      return decimals > 0 ? Math.round(avg * Math.pow(10, decimals)) / Math.pow(10, decimals) : Math.round(avg);
     };
 
     const weekAvgCalories = calculateAverage(last7Days, 'calories');
     const monthAvgCalories = calculateAverage(last30Days, 'calories');
-    
-    const weekAvgProtein = calculateAverage(last7Days, 'protein');
-    const weekAvgCarbs = calculateAverage(last7Days, 'carbs');
-    const weekAvgFat = calculateAverage(last7Days, 'fat');
+
+    const weekAvgProtein = calculateAverage(last7Days, 'protein', 1);
+    const weekAvgCarbs = calculateAverage(last7Days, 'carbs', 1);
+    const weekAvgFat = calculateAverage(last7Days, 'fat', 1);
 
     const calculateAdherence = (days: DailyProgress[]) => {
       if (days.length === 0) return 0;
