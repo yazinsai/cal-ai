@@ -81,7 +81,7 @@ export function EnhancedFoodEntryList({ entries, onUpdate }: EnhancedFoodEntryLi
   const adjustValue = (entry: FoodEntry, field: keyof FoodEntry, delta: number) => {
     if (field === 'calories') {
       // When adjusting calories, scale all macros proportionally
-      const newCalories = Math.max(0, entry.calories + delta);
+      const newCalories = Math.max(0, Math.round(entry.calories + delta));
       const ratio = entry.calories > 0 ? newCalories / entry.calories : 1;
       
       updateFoodEntry(entry.id, {
@@ -94,7 +94,7 @@ export function EnhancedFoodEntryList({ entries, onUpdate }: EnhancedFoodEntryLi
     } else {
       // For direct macro adjustments (if needed elsewhere)
       updateFoodEntry(entry.id, {
-        [field]: Math.max(0, (entry[field] as number) + delta),
+        [field]: Math.max(0, Math.round((entry[field] as number) + delta)),
       });
     }
     if (onUpdate) onUpdate();

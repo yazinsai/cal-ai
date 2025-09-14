@@ -11,11 +11,11 @@ export function DailyHeader({ progress, targets }: DailyHeaderProps) {
   if (!targets) return null;
 
   const remaining = {
-    calories: targets.calories - progress.totals.calories,
-    protein: targets.protein - progress.totals.protein,
-    carbs: targets.carbs - progress.totals.carbs,
-    fat: targets.fat - progress.totals.fat,
-    sugar: targets.sugar - progress.totals.sugar,
+    calories: Math.round(targets.calories - progress.totals.calories),
+    protein: Math.round(targets.protein - progress.totals.protein),
+    carbs: Math.round(targets.carbs - progress.totals.carbs),
+    fat: Math.round(targets.fat - progress.totals.fat),
+    sugar: Math.round(targets.sugar - progress.totals.sugar),
   };
 
   const getChipColor = (value: number, isCalories: boolean = false) => {

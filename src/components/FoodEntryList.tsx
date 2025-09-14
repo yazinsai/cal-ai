@@ -34,10 +34,10 @@ export function FoodEntryList({ entries, onUpdate }: FoodEntryListProps) {
       const ratio = newCalories / entry.calories;
       updateFoodEntry(id, {
         calories: Math.round(newCalories),
-        protein: Math.round(entry.protein * ratio * 10) / 10,
-        carbs: Math.round(entry.carbs * ratio * 10) / 10,
-        fat: Math.round(entry.fat * ratio * 10) / 10,
-        sugar: Math.round(entry.sugar * ratio * 10) / 10,
+        protein: Math.round(entry.protein * ratio),
+        carbs: Math.round(entry.carbs * ratio),
+        fat: Math.round(entry.fat * ratio),
+        sugar: Math.round(entry.sugar * ratio),
       });
       if (onUpdate) onUpdate();
     }
