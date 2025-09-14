@@ -110,7 +110,7 @@ export function deleteFoodEntry(entryId: string): void {
 export function getDailyProgress(date?: string): DailyProgress {
   const dateKey = date || getTodayKey();
   const entries = loadFoodEntries(dateKey);
-  
+
   const totals = entries.reduce((acc, entry) => ({
     calories: acc.calories + entry.calories,
     protein: acc.protein + entry.protein,
@@ -124,7 +124,14 @@ export function getDailyProgress(date?: string): DailyProgress {
     fat: 0,
     sugar: 0,
   });
-  
+
+  // Round all totals to avoid floating point precision issues
+  totals.calories = Math.round(totals.calories);
+  totals.protein = Math.round(totals.protein * 10) / 10;
+  totals.carbs = Math.round(totals.carbs * 10) / 10;
+  totals.fat = Math.round(totals.fat * 10) / 10;
+  totals.sugar = Math.round(totals.sugar * 10) / 10;
+
   return {
     date: dateKey,
     entries,

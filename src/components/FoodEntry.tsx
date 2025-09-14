@@ -23,7 +23,8 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [isCapturingImage, setIsCapturingImage] = useState(false);
-  const showQuickLog = true;
+  const [isFromCamera, setIsFromCamera] = useState(false);
+  const [quantityMultiplier, setQuantityMultiplier] = useState(1);
   const { loading, analyzeImage, analyzeText } = useAI();
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,7 +61,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
       setIsCapturingImage(false);
-      
+
       // Compress and analyze the image
       try {
         const compressedImage = await compressImage(imageSrc, 800, 800, 0.7);
@@ -79,9 +80,11 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
             mealType: getMealType(),
             confidence: result.confidence,
           };
-          
+
           // Show the entry for review/confirmation
           setCurrentEntry(entry);
+          setIsFromCamera(true);
+          setQuantityMultiplier(1);
         }
       } catch (error) {
         console.error('Failed to process image:', error);
@@ -113,6 +116,8 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
               confidence: result.confidence,
             };
             setCurrentEntry(entry);
+            setIsFromCamera(true);
+            setQuantityMultiplier(1);
           }
         } catch (error) {
           console.error('Failed to process image:', error);
@@ -124,7 +129,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
 
   const handleTextSubmit = async () => {
     if (!description.trim()) return;
-    
+
     setShowSuggestions(false);
     const result = await analyzeText(description);
     if (result) {
@@ -140,19 +145,21 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
         mealType: getMealType(),
         confidence: result.confidence,
       };
-      
+
       // Auto-save the entry for quick logging
       saveFoodEntry(entry);
-      
+
       if (onEntryAdded) {
         onEntryAdded(entry);
       }
-      
+
       // Clear the input for next entry
       setDescription('');
-      
+
       // Optionally show the entry for review (but it's already saved)
       setCurrentEntry(entry);
+      setIsFromCamera(false);
+      setQuantityMultiplier(1);
     }
   };
 
@@ -197,22 +204,34 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
       imageUrl: item.imageUrl,
       mealType: getMealType(),
     };
-    
+
     setCurrentEntry(entry);
+    setIsFromCamera(false);
+    setQuantityMultiplier(1);
   };
 
   const confirmEntry = () => {
     if (currentEntry) {
-      const fullEntry = currentEntry as FoodEntryType;
+      // Apply the quantity multiplier to all nutrition values
+      const fullEntry: FoodEntryType = {
+        ...currentEntry as FoodEntryType,
+        calories: Math.round((currentEntry.calories || 0) * quantityMultiplier),
+        protein: Math.round((currentEntry.protein || 0) * quantityMultiplier * 10) / 10,
+        carbs: Math.round((currentEntry.carbs || 0) * quantityMultiplier * 10) / 10,
+        fat: Math.round((currentEntry.fat || 0) * quantityMultiplier * 10) / 10,
+        sugar: Math.round((currentEntry.sugar || 0) * quantityMultiplier * 10) / 10,
+      };
       saveFoodEntry(fullEntry);
-      
+
       if (onEntryAdded) {
         onEntryAdded(fullEntry);
       }
-      
+
       setCurrentEntry(null);
       setDescription('');
       setQuickLogItems(loadQuickLogItems());
+      setIsFromCamera(false);
+      setQuantityMultiplier(1);
     }
   };
 
@@ -379,13 +398,13 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
         )}
       </div>
 
-      {showQuickLog && quickLogItems.length > 0 && (
+      {!isFromCamera && quickLogItems.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
           <div className="flex items-center mb-3">
             <Zap className="w-5 h-5 mr-2 text-yellow-500" />
             <h3 className="font-semibold text-gray-900 dark:text-white">Quick Log</h3>
           </div>
-          
+
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {quickLogItems.slice(0, 8).map((item) => (
               <button
@@ -453,11 +472,11 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
                 </button>
               </div>
             )}
-            
+
             <div className="text-3xl font-bold text-blue-500 mb-4">
-              {currentEntry.calories} calories
+              {Math.round((currentEntry.calories || 0) * quantityMultiplier)} calories
             </div>
-            
+
             {reanalyzing && (
               <div className="flex items-center text-sm text-blue-600 dark:text-blue-400 mb-2">
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -465,6 +484,28 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
               </div>
             )}
           </div>
+
+          {/* Quantity multiplier buttons for camera/upload entries */}
+          {isFromCamera && (
+            <div className="mb-4">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Quantity</div>
+              <div className="flex gap-2">
+                {[0.5, 0.75, 1, 1.5].map((multiplier) => (
+                  <button
+                    key={multiplier}
+                    onClick={() => setQuantityMultiplier(multiplier)}
+                    className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors ${
+                      quantityMultiplier === multiplier
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {multiplier}x
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             {(['protein', 'carbs', 'fat', 'sugar'] as const).map((macro) => (
@@ -480,7 +521,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
                     <Minus className="w-4 h-4" />
                   </button>
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    {currentEntry[macro]}g
+                    {Math.round(((currentEntry[macro] as number) || 0) * quantityMultiplier * 10) / 10}g
                   </span>
                   <button
                     onClick={() => adjustValue(macro, 1)}

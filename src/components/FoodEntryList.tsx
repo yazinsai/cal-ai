@@ -33,11 +33,11 @@ export function FoodEntryList({ entries, onUpdate }: FoodEntryListProps) {
       const newCalories = Math.max(0, entry.calories + amount);
       const ratio = newCalories / entry.calories;
       updateFoodEntry(id, {
-        calories: newCalories,
-        protein: Math.round(entry.protein * ratio),
-        carbs: Math.round(entry.carbs * ratio),
-        fat: Math.round(entry.fat * ratio),
-        sugar: Math.round(entry.sugar * ratio),
+        calories: Math.round(newCalories),
+        protein: Math.round(entry.protein * ratio * 10) / 10,
+        carbs: Math.round(entry.carbs * ratio * 10) / 10,
+        fat: Math.round(entry.fat * ratio * 10) / 10,
+        sugar: Math.round(entry.sugar * ratio * 10) / 10,
       });
       if (onUpdate) onUpdate();
     }
@@ -99,10 +99,10 @@ export function FoodEntryList({ entries, onUpdate }: FoodEntryListProps) {
                             {entry.name}
                           </div>
                           <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            <span>{entry.calories} cal</span>
-                            <span>P: {entry.protein}g</span>
-                            <span>C: {entry.carbs}g</span>
-                            <span>F: {entry.fat}g</span>
+                            <span>{Math.round(entry.calories)} cal</span>
+                            <span>P: {entry.protein.toFixed(1)}g</span>
+                            <span>C: {entry.carbs.toFixed(1)}g</span>
+                            <span>F: {entry.fat.toFixed(1)}g</span>
                             <span className="text-xs">
                               {format(new Date(entry.timestamp), 'h:mm a')}
                             </span>
