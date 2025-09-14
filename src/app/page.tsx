@@ -293,7 +293,7 @@ export default function Home() {
             className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <FoodEntry onEntryAdded={(entry) => {
+            <FoodEntry onEntryAdded={() => {
               refreshProgress();
               setShowQuickAdd(false);
             }} />
