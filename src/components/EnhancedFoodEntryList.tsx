@@ -86,10 +86,10 @@ export function EnhancedFoodEntryList({ entries, onUpdate }: EnhancedFoodEntryLi
       
       updateFoodEntry(entry.id, {
         calories: newCalories,
-        protein: Math.round(entry.protein * ratio * 10) / 10,
-        carbs: Math.round(entry.carbs * ratio * 10) / 10,
-        fat: Math.round(entry.fat * ratio * 10) / 10,
-        sugar: Math.round(entry.sugar * ratio * 10) / 10,
+        protein: Math.round(entry.protein * ratio),
+        carbs: Math.round(entry.carbs * ratio),
+        fat: Math.round(entry.fat * ratio),
+        sugar: Math.round(entry.sugar * ratio),
       });
     } else {
       // For direct macro adjustments (if needed elsewhere)
@@ -229,10 +229,10 @@ export function EnhancedFoodEntryList({ entries, onUpdate }: EnhancedFoodEntryLi
                           </span>
                         </div>
                         <div className="flex items-center gap-3 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                          <span>P: {entry.protein.toFixed(1)}g</span>
-                          <span>C: {entry.carbs.toFixed(1)}g</span>
-                          <span>F: {entry.fat.toFixed(1)}g</span>
-                          <span>S: {entry.sugar.toFixed(1)}g</span>
+                          <span>P: {Math.round(entry.protein)}g</span>
+                          <span>C: {Math.round(entry.carbs)}g</span>
+                          <span>F: {Math.round(entry.fat)}g</span>
+                          <span>S: {Math.round(entry.sugar)}g</span>
                         </div>
                       </div>
 

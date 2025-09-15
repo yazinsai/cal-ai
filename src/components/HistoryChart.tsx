@@ -40,10 +40,10 @@ export default function HistoryChart({ history, targets }: HistoryChartProps) {
       .map(day => ({
         date: format(parseISO(day.date), 'MMM dd'),
         calories: day.totals.calories,
-        protein: day.totals.protein,
-        carbs: day.totals.carbs,
-        fat: day.totals.fat,
-        sugar: day.totals.sugar,
+        protein: Math.round(day.totals.protein),
+        carbs: Math.round(day.totals.carbs),
+        fat: Math.round(day.totals.fat),
+        sugar: Math.round(day.totals.sugar),
         target: targets.calories,
       }));
   }, [history, dateRange, targets]);

@@ -38,9 +38,9 @@ export default function Statistics({ history, targets }: StatisticsProps) {
     const weekAvgCalories = calculateAverage(last7Days, 'calories');
     const monthAvgCalories = calculateAverage(last30Days, 'calories');
 
-    const weekAvgProtein = calculateAverage(last7Days, 'protein', 1);
-    const weekAvgCarbs = calculateAverage(last7Days, 'carbs', 1);
-    const weekAvgFat = calculateAverage(last7Days, 'fat', 1);
+    const weekAvgProtein = calculateAverage(last7Days, 'protein');
+    const weekAvgCarbs = calculateAverage(last7Days, 'carbs');
+    const weekAvgFat = calculateAverage(last7Days, 'fat');
 
     const calculateAdherence = (days: DailyProgress[]) => {
       if (days.length === 0) return 0;

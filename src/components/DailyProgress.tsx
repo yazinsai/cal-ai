@@ -103,7 +103,7 @@ export function DailyProgress({ progress, targets }: DailyProgressProps) {
                 </span>
                 <span className="text-sm">
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    {progress.totals[macro].toFixed(1)}g
+                    {Math.round(progress.totals[macro])}g
                   </span>
                   {targets && (
                     <span className="text-gray-500 dark:text-gray-400 ml-1">

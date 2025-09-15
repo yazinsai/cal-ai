@@ -310,6 +310,15 @@ A **lightning-fast**, client-side calorie tracking application designed for **ef
 - [ ] User feedback mechanism
 - [ ] Version control and release notes
 
+## Recent Updates
+
+### UI/UX Improvements (2025-09-14)
+- [x] **Gram Display Rounding**: All gram values (protein, carbs, fat, sugar) now display as whole numbers throughout the application for cleaner UI
+  - Updated FoodEntryList, EnhancedFoodEntryList, DailyProgress, FoodEntry components
+  - Updated Statistics component to calculate averages without decimals
+  - Updated HistoryChart to round macro values in chart data
+  - Ensures consistent whole number display across all components
+
 ## Technical Considerations
 
 ### Speed & Performance Requirements

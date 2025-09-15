@@ -100,9 +100,9 @@ export function FoodEntryList({ entries, onUpdate }: FoodEntryListProps) {
                           </div>
                           <div className="flex items-center gap-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
                             <span>{Math.round(entry.calories)} cal</span>
-                            <span>P: {entry.protein.toFixed(1)}g</span>
-                            <span>C: {entry.carbs.toFixed(1)}g</span>
-                            <span>F: {entry.fat.toFixed(1)}g</span>
+                            <span>P: {Math.round(entry.protein)}g</span>
+                            <span>C: {Math.round(entry.carbs)}g</span>
+                            <span>F: {Math.round(entry.fat)}g</span>
                             <span className="text-xs">
                               {format(new Date(entry.timestamp), 'h:mm a')}
                             </span>
@@ -148,9 +148,9 @@ export function FoodEntryList({ entries, onUpdate }: FoodEntryListProps) {
                   {entries.reduce((sum, entry) => sum + entry.calories, 0)} calories
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  P: {entries.reduce((sum, entry) => sum + entry.protein, 0)}g |
-                  C: {entries.reduce((sum, entry) => sum + entry.carbs, 0)}g |
-                  F: {entries.reduce((sum, entry) => sum + entry.fat, 0)}g
+                  P: {Math.round(entries.reduce((sum, entry) => sum + entry.protein, 0))}g |
+                  C: {Math.round(entries.reduce((sum, entry) => sum + entry.carbs, 0))}g |
+                  F: {Math.round(entries.reduce((sum, entry) => sum + entry.fat, 0))}g
                 </div>
               </div>
             </div>

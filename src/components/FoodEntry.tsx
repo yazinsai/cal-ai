@@ -521,7 +521,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
                     <Minus className="w-4 h-4" />
                   </button>
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    {Math.round(((currentEntry[macro] as number) || 0) * quantityMultiplier * 10) / 10}g
+                    {Math.round(((currentEntry[macro] as number) || 0) * quantityMultiplier)}g
                   </span>
                   <button
                     onClick={() => adjustValue(macro, 1)}
