@@ -288,9 +288,9 @@ export default function Home() {
       </button>
       
       {showQuickAdd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowQuickAdd(false)}>
-          <div 
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full p-4"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto" onClick={() => setShowQuickAdd(false)}>
+          <div
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full p-4 my-auto max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <FoodEntry onEntryAdded={() => {
