@@ -185,10 +185,32 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
     }
   };
 
-  const selectSuggestion = (suggestion: string) => {
+  const selectSuggestion = async (suggestion: string) => {
     setDescription(suggestion);
     setShowSuggestions(false);
-    inputRef.current?.focus();
+
+    // Auto-submit the suggestion
+    const result = await analyzeText(suggestion);
+    if (result) {
+      const entry: FoodEntryType = {
+        id: `food_${Date.now()}`,
+        name: result.name || suggestion,
+        calories: result.calories || 0,
+        protein: result.protein || 0,
+        carbs: result.carbs || 0,
+        fat: result.fat || 0,
+        sugar: result.sugar || 0,
+        timestamp: new Date().toISOString(),
+        mealType: getMealType(),
+        confidence: result.confidence,
+      };
+
+      // Show the entry for review
+      setCurrentEntry(entry);
+      setIsFromCamera(false);
+      setQuantityMultiplier(1);
+      setDescription('');
+    }
   };
 
   const handleQuickLog = (item: QuickLogItem) => {
