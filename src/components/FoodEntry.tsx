@@ -212,14 +212,19 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
 
   const confirmEntry = () => {
     if (currentEntry) {
-      // Apply the quantity multiplier to all nutrition values
+      // Ensure we have all required fields for FoodEntryType
       const fullEntry: FoodEntryType = {
-        ...currentEntry as FoodEntryType,
+        id: currentEntry.id || `food_${Date.now()}`,
+        name: currentEntry.name || 'Unknown food',
         calories: Math.round((currentEntry.calories || 0) * quantityMultiplier),
         protein: Math.round((currentEntry.protein || 0) * quantityMultiplier * 10) / 10,
         carbs: Math.round((currentEntry.carbs || 0) * quantityMultiplier * 10) / 10,
         fat: Math.round((currentEntry.fat || 0) * quantityMultiplier * 10) / 10,
         sugar: Math.round((currentEntry.sugar || 0) * quantityMultiplier * 10) / 10,
+        timestamp: currentEntry.timestamp || new Date().toISOString(),
+        mealType: currentEntry.mealType || getMealType(),
+        imageUrl: currentEntry.imageUrl,
+        confidence: currentEntry.confidence,
       };
       saveFoodEntry(fullEntry);
 
