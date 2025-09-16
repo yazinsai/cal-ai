@@ -211,33 +211,37 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
   };
 
   const confirmEntry = () => {
-    if (currentEntry) {
-      // Ensure we have all required fields for FoodEntryType
-      const fullEntry: FoodEntryType = {
-        id: currentEntry.id || `food_${Date.now()}`,
-        name: currentEntry.name || 'Unknown food',
-        calories: Math.round((currentEntry.calories || 0) * quantityMultiplier),
-        protein: Math.round((currentEntry.protein || 0) * quantityMultiplier * 10) / 10,
-        carbs: Math.round((currentEntry.carbs || 0) * quantityMultiplier * 10) / 10,
-        fat: Math.round((currentEntry.fat || 0) * quantityMultiplier * 10) / 10,
-        sugar: Math.round((currentEntry.sugar || 0) * quantityMultiplier * 10) / 10,
-        timestamp: currentEntry.timestamp || new Date().toISOString(),
-        mealType: currentEntry.mealType || getMealType(),
-        imageUrl: currentEntry.imageUrl,
-        confidence: currentEntry.confidence,
-      };
-      saveFoodEntry(fullEntry);
+    if (!currentEntry) return;
 
-      if (onEntryAdded) {
-        onEntryAdded(fullEntry);
-      }
+    // Ensure we have all required fields for FoodEntryType
+    const fullEntry: FoodEntryType = {
+      id: currentEntry.id || `food_${Date.now()}`,
+      name: currentEntry.name || 'Unknown food',
+      calories: Math.round((currentEntry.calories || 0) * quantityMultiplier),
+      protein: Math.round((currentEntry.protein || 0) * quantityMultiplier),
+      carbs: Math.round((currentEntry.carbs || 0) * quantityMultiplier),
+      fat: Math.round((currentEntry.fat || 0) * quantityMultiplier),
+      sugar: Math.round((currentEntry.sugar || 0) * quantityMultiplier),
+      timestamp: currentEntry.timestamp || new Date().toISOString(),
+      mealType: currentEntry.mealType || getMealType(),
+      imageUrl: currentEntry.imageUrl,
+      confidence: currentEntry.confidence,
+    };
 
-      setCurrentEntry(null);
-      setDescription('');
-      setQuickLogItems(loadQuickLogItems());
-      setIsFromCamera(false);
-      setQuantityMultiplier(1);
+    // Save the entry
+    saveFoodEntry(fullEntry);
+
+    // Call the callback IMMEDIATELY to close dialog
+    if (onEntryAdded) {
+      onEntryAdded(fullEntry);
     }
+
+    // Clear state after callback
+    setCurrentEntry(null);
+    setDescription('');
+    setQuickLogItems(loadQuickLogItems());
+    setIsFromCamera(false);
+    setQuantityMultiplier(1);
   };
 
   const adjustValue = (field: keyof FoodEntryType, delta: number) => {
