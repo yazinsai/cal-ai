@@ -24,6 +24,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [isCapturingImage, setIsCapturingImage] = useState(false);
   const [isFromCamera, setIsFromCamera] = useState(false);
+  const [showQuantityMultiplier, setShowQuantityMultiplier] = useState(false);
   const [quantityMultiplier, setQuantityMultiplier] = useState(1);
   const { loading, analyzeImage, analyzeText } = useAI();
   const webcamRef = useRef<Webcam>(null);
@@ -84,6 +85,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
           // Show the entry for review/confirmation
           setCurrentEntry(entry);
           setIsFromCamera(true);
+          setShowQuantityMultiplier(true);
           setQuantityMultiplier(1);
         }
       } catch (error) {
@@ -117,6 +119,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
             };
             setCurrentEntry(entry);
             setIsFromCamera(true);
+            setShowQuantityMultiplier(true);
             setQuantityMultiplier(1);
           }
         } catch (error) {
@@ -159,6 +162,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
       // Optionally show the entry for review (but it's already saved)
       setCurrentEntry(entry);
       setIsFromCamera(false);
+      setShowQuantityMultiplier(true);
       setQuantityMultiplier(1);
     }
   };
@@ -208,6 +212,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
       // Show the entry for review
       setCurrentEntry(entry);
       setIsFromCamera(false);
+      setShowQuantityMultiplier(true);
       setQuantityMultiplier(1);
       setDescription('');
     }
@@ -229,6 +234,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
 
     setCurrentEntry(entry);
     setIsFromCamera(false);
+    setShowQuantityMultiplier(true);
     setQuantityMultiplier(1);
   };
 
@@ -263,6 +269,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
     setDescription('');
     setQuickLogItems(loadQuickLogItems());
     setIsFromCamera(false);
+    setShowQuantityMultiplier(false);
     setQuantityMultiplier(1);
   };
 
@@ -429,7 +436,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
         )}
       </div>
 
-      {!isFromCamera && quickLogItems.length > 0 && (
+      {!currentEntry && !isFromCamera && quickLogItems.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
           <div className="flex items-center mb-3">
             <Zap className="w-5 h-5 mr-2 text-yellow-500" />
@@ -516,8 +523,8 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
             )}
           </div>
 
-          {/* Quantity multiplier buttons for camera/upload entries */}
-          {isFromCamera && (
+          {/* Quantity multiplier buttons - show for all entries */}
+          {showQuantityMultiplier && (
             <div className="mb-4">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Quantity</div>
               <div className="flex gap-2">
