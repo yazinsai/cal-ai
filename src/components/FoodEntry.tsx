@@ -400,7 +400,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
 
           {/* Autocomplete suggestions dropdown */}
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
@@ -580,7 +580,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
 
           <button
             onClick={confirmEntry}
-            className="w-full flex items-center justify-center py-3 px-4 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors"
+            className="w-full flex items-center justify-center py-3 px-4 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors relative z-10"
           >
             <Check className="w-5 h-5 mr-2" />
             Confirm & Save
