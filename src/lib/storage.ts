@@ -70,8 +70,9 @@ export function saveFoodEntry(entry: FoodEntry): void {
   
   const existingEntries = loadFoodEntries(todayKey);
   // Strip large/transient fields that we don't persist post-analysis
-  const { imageUrl: _omitImage, ...sanitizedEntry } = entry as any;
-  existingEntries.push(sanitizedEntry as FoodEntry);
+  const sanitizedEntry = { ...entry } as FoodEntry & { imageUrl?: string };
+  delete sanitizedEntry.imageUrl;
+  existingEntries.push(sanitizedEntry);
   
   try {
     localStorage.setItem(entriesKey, JSON.stringify(existingEntries));
@@ -83,7 +84,7 @@ export function saveFoodEntry(entry: FoodEntry): void {
         try {
           localStorage.setItem(entriesKey, JSON.stringify(existingEntries));
           break;
-        } catch (_e) {
+        } catch {
           // keep trimming
         }
       }
