@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Download, Upload, FileJson, FileText, Check, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { DailyProgress, UserProfile, DailyTarget } from '@/types';
+import { clearAllData } from '@/lib/storage';
 
 interface DataExportProps {
   history: DailyProgress[];
@@ -214,6 +215,24 @@ ${format(new Date(day.date), 'PP')}:
     setTimeout(() => setExportStatus('idle'), 3000);
   };
 
+  const [clearStatus, setClearStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const handleClearAll = () => {
+    const confirmed = window.confirm('This will delete ALL entries and settings. This cannot be undone. Continue?');
+    if (!confirmed) return;
+    try {
+      clearAllData();
+      setClearStatus('success');
+      // Reload app state so UI reflects cleared storage
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+    } catch (e) {
+      console.error('Failed to clear data', e);
+      setClearStatus('error');
+      setTimeout(() => setClearStatus('idle'), 3000);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
@@ -261,6 +280,28 @@ ${format(new Date(day.date), 'PP')}:
               Export failed. Please try again.
             </div>
           )}
+
+          <div className="pt-2">
+            <button
+              onClick={handleClearAll}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              <AlertCircle className="w-5 h-5" />
+              Clear All Entries
+            </button>
+            {clearStatus === 'success' && (
+              <div className="mt-2 flex items-center gap-2 text-green-600 text-sm">
+                <Check className="w-4 h-4" />
+                All data cleared.
+              </div>
+            )}
+            {clearStatus === 'error' && (
+              <div className="mt-2 flex items-center gap-2 text-red-600 text-sm">
+                <AlertCircle className="w-4 h-4" />
+                Failed to clear data.
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-4">
