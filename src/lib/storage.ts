@@ -69,11 +69,34 @@ export function saveFoodEntry(entry: FoodEntry): void {
   const entriesKey = `${STORAGE_KEYS.FOOD_ENTRIES}_${todayKey}`;
   
   const existingEntries = loadFoodEntries(todayKey);
-  existingEntries.push(entry);
+  // Strip large/transient fields that we don't persist post-analysis
+  const { imageUrl: _omitImage, ...sanitizedEntry } = entry as any;
+  existingEntries.push(sanitizedEntry as FoodEntry);
   
-  localStorage.setItem(entriesKey, JSON.stringify(existingEntries));
+  try {
+    localStorage.setItem(entriesKey, JSON.stringify(existingEntries));
+  } catch (err) {
+    // Attempt a minimal recovery: trim oldest entries for today until it fits
+    try {
+      while (existingEntries.length > 0) {
+        existingEntries.shift();
+        try {
+          localStorage.setItem(entriesKey, JSON.stringify(existingEntries));
+          break;
+        } catch (_e) {
+          // keep trimming
+        }
+      }
+      if (existingEntries.length === 0) {
+        // Re-throw if we absolutely cannot save
+        throw err;
+      }
+    } catch (finalErr) {
+      throw finalErr;
+    }
+  }
   
-  updateQuickLogItems(entry);
+  updateQuickLogItems(sanitizedEntry as FoodEntry);
 }
 
 export function loadFoodEntries(date?: string): FoodEntry[] {
@@ -192,6 +215,7 @@ function updateQuickLogItems(entry: FoodEntry): void {
     items[existingIndex].frequency = (items[existingIndex].frequency || 0) + 1;
     items[existingIndex].lastUsed = new Date().toISOString();
   } else {
+    // Do not persist imageUrl in quick log items to avoid quota pressure
     items.push({
       id: `quick_${Date.now()}`,
       name: entry.name,
@@ -200,7 +224,6 @@ function updateQuickLogItems(entry: FoodEntry): void {
       carbs: entry.carbs,
       fat: entry.fat,
       sugar: entry.sugar,
-      imageUrl: entry.imageUrl,
       lastUsed: new Date().toISOString(),
       frequency: 1,
     });

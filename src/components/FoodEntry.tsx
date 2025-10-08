@@ -257,7 +257,13 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
     };
 
     // Save the entry
-    saveFoodEntry(fullEntry);
+    try {
+      saveFoodEntry(fullEntry);
+    } catch (e) {
+      console.error(e);
+      // Minimal UX feedback; we do not block clearing the UI
+      alert('Storage is full. Consider exporting or clearing history.');
+    }
 
     // Call the callback IMMEDIATELY to close dialog
     if (onEntryAdded) {
@@ -400,7 +406,10 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
 
           {/* Autocomplete suggestions dropdown */}
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+            <div
+              className={`absolute w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-10 ${currentEntry ? 'pointer-events-none' : ''}`}
+              style={currentEntry ? { pointerEvents: 'none' } : undefined}
+            >
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
@@ -580,7 +589,7 @@ export function FoodEntry({ onEntryAdded }: FoodEntryProps) {
 
           <button
             onClick={confirmEntry}
-            className="w-full flex items-center justify-center py-3 px-4 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors relative z-10"
+            className="w-full flex items-center justify-center py-3 px-4 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors relative z-30"
           >
             <Check className="w-5 h-5 mr-2" />
             Confirm & Save
