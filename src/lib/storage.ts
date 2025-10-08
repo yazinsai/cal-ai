@@ -273,14 +273,33 @@ export function clearAllData(): void {
 }
 
 export function exportData(): string {
+  const rawQuickLog = loadQuickLogItems();
+  const rawHistory = getHistoricalData(90);
+
+  // Strip any base64 image data from export to keep file size small
+  const quickLogItems = rawQuickLog.map(item => {
+    const clone = { ...item } as typeof item & { imageUrl?: string };
+    delete clone.imageUrl;
+    return clone;
+  });
+
+  const history = rawHistory.map(day => ({
+    ...day,
+    entries: day.entries.map(entry => {
+      const clone = { ...entry } as FoodEntry & { imageUrl?: string };
+      delete clone.imageUrl;
+      return clone as FoodEntry;
+    }),
+  }));
+
   const data = {
     profile: loadUserProfile(),
     targets: loadDailyTargets(),
     settings: loadAppSettings(),
-    quickLogItems: loadQuickLogItems(),
-    history: getHistoricalData(90),
+    quickLogItems,
+    history,
   };
-  
+
   return JSON.stringify(data, null, 2);
 }
 
