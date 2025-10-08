@@ -312,12 +312,24 @@ export function importData(jsonData: string): void {
     if (data.profile) saveUserProfile(data.profile);
     if (data.targets) saveDailyTargets(data.targets);
     if (data.settings) saveAppSettings(data.settings);
-    if (data.quickLogItems) saveQuickLogItems(data.quickLogItems);
+    if (data.quickLogItems) {
+      const sanitizedQL = data.quickLogItems.map((i: QuickLogItem) => {
+        const clone = { ...i } as QuickLogItem & { imageUrl?: string };
+        delete clone.imageUrl;
+        return clone as QuickLogItem;
+      });
+      saveQuickLogItems(sanitizedQL);
+    }
     
     if (data.history) {
       data.history.forEach((day: DailyProgress) => {
         const entriesKey = `${STORAGE_KEYS.FOOD_ENTRIES}_${day.date}`;
-        localStorage.setItem(entriesKey, JSON.stringify(day.entries));
+        const sanitizedEntries = day.entries.map((e: FoodEntry) => {
+          const clone = { ...e } as FoodEntry & { imageUrl?: string };
+          delete clone.imageUrl;
+          return clone as FoodEntry;
+        });
+        localStorage.setItem(entriesKey, JSON.stringify(sanitizedEntries));
       });
     }
   } catch (error) {
