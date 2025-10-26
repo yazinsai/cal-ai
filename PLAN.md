@@ -312,6 +312,16 @@ A **lightning-fast**, client-side calorie tracking application designed for **ef
 
 ## Recent Updates
 
+### Documentation (2025-10-26)
+- [x] **README Overhaul**: Completely rewrote README.md for public release
+  - Added comprehensive project description and features
+  - Included detailed installation and configuration instructions
+  - Added usage guide with examples for all logging methods
+  - Documented tech stack, privacy features, and data storage
+  - Added development section with project structure and scripts
+  - Included roadmap, contributing guidelines, and acknowledgments
+  - Professional formatting suitable for public GitHub repository
+
 ### UI/UX Improvements (2025-09-14)
 - [x] **Gram Display Rounding**: All gram values (protein, carbs, fat, sugar) now display as whole numbers throughout the application for cleaner UI
   - Updated FoodEntryList, EnhancedFoodEntryList, DailyProgress, FoodEntry components
